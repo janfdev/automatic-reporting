@@ -14,8 +14,8 @@ export const users = pgTable("user", {
     banned: boolean("banned"),
     banReason: varchar("banReason"),
     banExpires: timestamp("banExpires"),
-    // Relasi ke tabel store
     storeId: varchar("stores_id").references(() => store.id),
+    deletedAt: timestamp("deletedAt"),
 });
 
 export const session = pgTable("session", {

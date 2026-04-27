@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { store, users, account } from "@/db/schema";
+import { store, users, account, session as sessionTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { hashPassword } from "better-auth/crypto";
 
@@ -29,6 +29,7 @@ export async function GET(req: Request) {
       createdAt: users.createdAt,
     })
     .from(users)
+    .where(isNull(users.deletedAt))
     .leftJoin(store, eq(users.storeId, store.id))
     .orderBy(desc(users.createdAt));
 
@@ -154,13 +155,17 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    // Delete accounts and sessions to prevent constraint violations
-    await db.delete(account).where(eq(account.userId, id));
-    // Import session from schema to delete session 
-    const { session: sessionTable } = require("@/db/schema");
-    await db.delete(sessionTable).where(eq(sessionTable.userId, id));
+    // Mark as banned and set deletedAt for soft delete
+    await db.update(users)
+      .set({ 
+        banned: true, 
+        deletedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, id));
 
-    await db.delete(users).where(eq(users.id, id));
+    // Delete sessions to force immediate logout
+    await db.delete(sessionTable).where(eq(sessionTable.userId, id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

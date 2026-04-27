@@ -1,38 +1,35 @@
-export function formatDate(
-  date: Date | string | number | undefined,
-  opts: Intl.DateTimeFormatOptions = {}
-) {
-  if (!date) return '';
+/**
+ * Menghapus semua karakter non-digit dan mengubahnya menjadi number.
+ * Berguna untuk membersihkan input dengan separator ribuan sebelum disimpan ke state/DB.
+ */
+export const parseNumberInput = (value: string): number => {
+  return parseInt(value.replace(/\D/g, ""), 10) || 0;
+};
 
-  try {
-    return new Intl.DateTimeFormat('en-US', {
-      month: opts.month ?? 'long',
-      day: opts.day ?? 'numeric',
-      year: opts.year ?? 'numeric',
-      ...opts
-    }).format(new Date(date));
-  } catch {
-    return '';
-  }
-}
+/**
+ * Memformat angka menjadi format ribuan Rupiah untuk tampilan input.
+ * Contoh: 1000000 -> "1.000.000"
+ */
+export const formatRupiahInput = (value: number | string): string => {
+  if (!value) return "";
+  const numberString = value.toString().replace(/\D/g, "");
+  return numberString.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
 
-export function digitsOnly(value: string): string {
-  return value.replace(/\D/g, "");
-}
+/**
+ * Memformat angka menjadi format mata uang Rupiah lengkap (Rp).
+ */
+export const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount);
+};
 
-export function parseNumberInput(value: string): number {
-  const normalized = digitsOnly(value);
-  if (!normalized) return 0;
-  return Number(normalized);
-}
-
-export function formatRupiahInput(value: number | string | undefined): string {
-  if (value === undefined || value === null) return "";
-  const asNumber = typeof value === "number" ? value : parseNumberInput(value);
-  if (!Number.isFinite(asNumber) || asNumber === 0) return "";
-  return asNumber.toLocaleString("id-ID");
-}
-
-export function alphaNumericSpaceOnly(value: string): string {
+/**
+ * Memastikan input hanya berisi huruf, angka, dan spasi.
+ */
+export const alphaNumericSpaceOnly = (value: string): string => {
   return value.replace(/[^a-zA-Z0-9\s]/g, "");
-}
+};

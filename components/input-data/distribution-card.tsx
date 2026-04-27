@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { CheckSquare } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
 import { parseNumberInput } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function DistributionCard() {
   const { control } = useFormContext<ReportFormValues>();
@@ -25,15 +26,23 @@ export function DistributionCard() {
           <Controller
             control={control}
             name="fulfillmentPb"
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={field.value ?? ""}
-                onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
-                className="bg-background border-input"
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
         </div>
@@ -42,15 +51,23 @@ export function DistributionCard() {
           <Controller
             control={control}
             name="avgFulfillmentDc"
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={field.value ?? ""}
-                onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
-                className="bg-background border-input"
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={field.value ?? ""}
+                  onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
         </div>

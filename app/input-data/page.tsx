@@ -41,7 +41,7 @@ export default function InputDataPage() {
   const { data: session } = useSession();
 
   const methods = useForm<ReportFormValues>({
-    resolver: zodResolver(reportSchema),
+    resolver: zodResolver(reportSchema) as any,
     defaultValues: {
       salesGroceries: 0,
       salesLpg: 0,
@@ -84,8 +84,9 @@ export default function InputDataPage() {
       await saveReport(values, false);
       toast.success("Draft berhasil disimpan!", { id: toastId });
       reset();
-    } catch (error: any) {
-      toast.error(error.message, { id: toastId });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Gagal menyimpan draft";
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setIsSaving(false);
     }
@@ -112,8 +113,9 @@ export default function InputDataPage() {
 
       toast.success("Laporan berhasil dikirim ke WhatsApp!", { id: toastId });
       reset();
-    } catch (error: any) {
-      toast.error(error.message, { id: toastId });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Gagal mengirim laporan";
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setIsSending(false);
     }

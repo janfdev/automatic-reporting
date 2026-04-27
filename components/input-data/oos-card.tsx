@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Plus, Trash2 } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
 import { alphaNumericSpaceOnly } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function OosCard() {
-  const { register, control } = useFormContext<ReportFormValues>();
+  const { register, control, formState: { errors } } = useFormContext<ReportFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "itemOos",
@@ -30,15 +31,23 @@ export function OosCard() {
             <div key={field.id} className="space-y-2 relative">
               <Label className="text-muted-foreground">OOS Item {index + 1}</Label>
               <div className="flex items-center gap-2">
-                <Input 
-                  placeholder="Nama item" 
-                  {...register(`itemOos.${index}.name` as const, {
-                    onChange: (e) => {
-                      e.target.value = alphaNumericSpaceOnly(e.target.value);
-                    },
-                  })}
-                  className="bg-background border-input" 
-                />
+                <div className="flex-1 space-y-1">
+                  <Input 
+                    placeholder="Nama item" 
+                    {...register(`itemOos.${index}.name` as const, {
+                      onChange: (e) => {
+                        e.target.value = alphaNumericSpaceOnly(e.target.value);
+                      },
+                    })}
+                    className={cn(
+                      "bg-background border-input",
+                      errors.itemOos?.[index]?.name && "border-red-500 focus-visible:ring-red-500"
+                    )}
+                  />
+                  {errors.itemOos?.[index]?.name && (
+                    <p className="text-xs text-red-500 font-medium">{errors.itemOos[index]?.name?.message}</p>
+                  )}
+                </div>
                 {fields.length > 1 && (
                   <Button 
                     type="button"

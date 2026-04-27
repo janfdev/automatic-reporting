@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { TrendingUp } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
 import { formatRupiahInput, parseNumberInput } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export function SalesCard() {
   const { control, watch } = useFormContext<ReportFormValues>();
@@ -31,15 +32,23 @@ export function SalesCard() {
           <Controller
             control={control}
             name="salesGroceries"
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={formatRupiahInput(field.value)}
-                onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
-                className="bg-background border-input"
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatRupiahInput(field.value)}
+                  onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
         </div>
@@ -48,15 +57,23 @@ export function SalesCard() {
           <Controller
             control={control}
             name="salesLpg"
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={formatRupiahInput(field.value)}
-                onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
-                className="bg-background border-input"
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatRupiahInput(field.value)}
+                  onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
         </div>
@@ -65,15 +82,23 @@ export function SalesCard() {
           <Controller
             control={control}
             name="salesPelumas"
-            render={({ field }) => (
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder="0"
-                value={formatRupiahInput(field.value)}
-                onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
-                className="bg-background border-input"
-              />
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatRupiahInput(field.value)}
+                  onChange={(e) => field.onChange(parseNumberInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
         </div>

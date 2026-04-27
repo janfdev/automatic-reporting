@@ -29,7 +29,7 @@ export function useFilteredNavItems(items: NavItem[]) {
     return {
       organization: undefined,
       user: undefined,
-      permissions: [],
+      permissions: [] as string[],
       role: undefined,
       hasOrg: true // Set to true to show org-required items
     };

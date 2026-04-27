@@ -16,7 +16,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { ReportsManagement } from "./reports-management";
 
@@ -33,7 +32,6 @@ type AnalyticsResponse = {
     waSent: number;
   }>;
 };
-
 
 const chartConfig: ChartConfig = {
   totalSales: {
