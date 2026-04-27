@@ -8,6 +8,13 @@
       "when": 1777133181842,
       "tag": "0000_spooky_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777281296996,
+      "tag": "0001_strange_wraith",
+      "breakpoints": true
     }
   ]
 }
