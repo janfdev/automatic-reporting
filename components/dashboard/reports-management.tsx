@@ -74,27 +74,66 @@ export function ReportsManagement() {
     loadReports();
   }, []);
 
+  // const handleResend = async (id: string) => {
+  //   setSendingId(id);
+  //   try {
+  //     // Re-use the existing send-wa API, or create a specific one for admin resending.
+  //     // Assuming send-wa can take an id or we can just show a toast for now.
+  //     // A full implementation would call `/api/send-wa?reportId=${id}` or similar.
+  //     const res = await fetch("/api/send-wa", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ reportId: id, action: "send_wa" })
+  //     });
+  //     const data = await res.json();
+  //     if (data.success) {
+  //       toast.success("Pesan berhasil dikirim ulang ke WhatsApp!");
+  //       loadReports();
+  //     } else {
+  //       toast.error(
+  //         "Berhasil diproses, namun pastikan Fonnte API terkonfigurasi dengan benar."
+  //       );
+  //     }
+  //   } catch {
+  //     toast.error("Terjadi kesalahan saat mengirim pesan.");
+  //   } finally {
+  //     setSendingId(null);
+  //   }
+  // };
+
   const handleResend = async (id: string) => {
     setSendingId(id);
+
     try {
-      // Re-use the existing send-wa API, or create a specific one for admin resending.
-      // Assuming send-wa can take an id or we can just show a toast for now.
-      // A full implementation would call `/api/send-wa?reportId=${id}` or similar.
       const res = await fetch("/api/send-wa", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId: id, action: "send_wa" })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          reportId: id
+        })
       });
+
       const data = await res.json();
-      if (data.success) {
-        toast.success("Pesan berhasil dikirim ulang ke WhatsApp!");
-        loadReports();
-      } else {
-        toast.error(
-          "Berhasil diproses, namun pastikan Fonnte API terkonfigurasi dengan benar."
-        );
+
+      // kalau response HTTP gagal
+      if (!res.ok) {
+        toast.error(data.error || "Gagal mengirim WhatsApp");
+        return;
       }
-    } catch {
+
+      // kalau backend return success false
+      if (!data.success) {
+        toast.error(data.error || "Pengiriman WhatsApp gagal");
+        return;
+      }
+
+      // success
+      toast.success("Pesan berhasil dikirim ke WhatsApp!");
+      await loadReports();
+    } catch (error) {
+      console.error("SEND WA ERROR:", error);
       toast.error("Terjadi kesalahan saat mengirim pesan.");
     } finally {
       setSendingId(null);

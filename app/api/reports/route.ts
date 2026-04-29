@@ -10,13 +10,13 @@ const reportPayloadSchema = z.object({
   salesGroceries: z.coerce.number().min(0).default(0),
   salesLpg: z.coerce.number().min(0).default(0),
   salesPelumas: z.coerce.number().min(0).default(0),
-  fulfillmentPb: z.coerce.number().min(0).max(100).default(0),
-  avgFulfillmentDc: z.coerce.number().min(0).max(100).default(0),
+  fulfillmentPb: z.coerce.number().min(0).default(0),
+  avgFulfillmentDc: z.coerce.number().min(0).default(0),
   itemOos: z
     .array(
       z.object({
-        name: z.string().trim().max(120),
-      }),
+        name: z.string().trim().max(120)
+      })
     )
     .default([]),
   stockLpg3kg: z.coerce.number().min(0).default(0),
@@ -25,7 +25,7 @@ const reportPayloadSchema = z.object({
   waste: z.coerce.number().min(0).default(0),
   losses: z.coerce.number().min(0).default(0),
   needSupport: z.string().max(2000).optional().default(""),
-  isPushedToWa: z.boolean().optional().default(false),
+  isPushedToWa: z.boolean().optional().default(false)
 });
 
 export async function POST(req: NextRequest) {
@@ -38,25 +38,30 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = reportPayloadSchema.safeParse(body);
     if (!parsed.success) {
+      console.log(
+        "VALIDATION ERROR:",
+        JSON.stringify(parsed.error.flatten(), null, 2)
+      );
+
       return NextResponse.json(
         {
           error: "Payload laporan tidak valid.",
-          details: parsed.error.flatten(),
+          details: parsed.error.flatten()
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Fetch user from db to get their storeId
     const authorId = session.user.id;
     const userRec = await db.query.users.findFirst({
-      where: eq(users.id, authorId),
+      where: eq(users.id, authorId)
     });
 
     if (!userRec || !userRec.storeId) {
       return NextResponse.json(
         { error: "Akun ini belum memiliki outlet (store) yang ditetapkan." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -73,11 +78,11 @@ export async function POST(req: NextRequest) {
       waste,
       losses,
       needSupport,
-      isPushedToWa,
+      isPushedToWa
     } = parsed.data;
 
     const sanitizedItemOos = itemOos.filter(
-      (item) => item.name.trim().length > 0,
+      (item) => item.name.trim().length > 0
     );
 
     // Hitung total otomatis dari server
@@ -104,7 +109,7 @@ export async function POST(req: NextRequest) {
         waste: Number(waste),
         losses: Number(losses),
         needSupport,
-        isPushedToWa,
+        isPushedToWa
       })
       .returning();
 
@@ -113,7 +118,7 @@ export async function POST(req: NextRequest) {
     console.error("API /api/reports Error:", e);
     return NextResponse.json(
       { error: "Terjadi kesalahan pada server saat menyimpan data." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

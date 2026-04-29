@@ -2,14 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, LogOut } from "lucide-react";
 import { ThemeModeToggle } from "@/components/themes/theme-mode-toggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { reportSchema, ReportFormValues } from "@/lib/validations/report";
+import { ReportFormValues } from "@/lib/validations/report";
 import { SalesCard } from "@/components/input-data/sales-card";
 import { DistributionCard } from "@/components/input-data/distribution-card";
 import { OosCard } from "@/components/input-data/oos-card";
@@ -98,28 +97,51 @@ export default function InputDataPage() {
   const onSubmitWA = async (values: ReportFormValues) => {
     setIsSending(true);
     const toastId = toast.loading("Menyimpan dan mengirim laporan...");
+
     try {
       const saveResult = await saveReport(values, true);
+
       const reportId = saveResult.data.id;
+
+      if (!reportId) {
+        throw new Error("Report ID tidak ditemukan");
+      }
 
       const waResponse = await fetch("/api/send-wa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ reportId })
+        body: JSON.stringify({
+          reportId
+        })
       });
 
       if (!waResponse.ok) {
-        throw new Error("Gagal mengirim ke WhatsApp Gateway");
+        let errorMessage = "Gagal mengirim ke WhatsApp Gateway";
+
+        try {
+          const errorResult = await waResponse.json();
+          errorMessage = errorResult.error || errorMessage;
+        } catch {
+          //
+        }
+
+        throw new Error(errorMessage);
       }
 
-      toast.success("Laporan berhasil dikirim ke WhatsApp!", { id: toastId });
+      toast.success("Laporan berhasil dikirim ke WhatsApp!", {
+        id: toastId
+      });
+
       reset();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Gagal mengirim laporan";
-      toast.error(errorMessage, { id: toastId });
+
+      toast.error(errorMessage, {
+        id: toastId
+      });
     } finally {
       setIsSending(false);
     }
@@ -219,8 +241,8 @@ export default function InputDataPage() {
           </main>
 
           <div className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:p-4">
-            <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
-              <Button
+            <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-2 sm:grid-cols-1 sm:gap-3">
+              {/* <Button
                 variant="secondary"
                 onClick={handleSubmit(onSaveDraft)}
                 disabled={isSaving || isSending}
@@ -230,7 +252,7 @@ export default function InputDataPage() {
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : null}
                 Save Data Saja (Draft)
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleSubmit(onSubmitWA)}
                 disabled={isSaving || isSending}
