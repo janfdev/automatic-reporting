@@ -6,14 +6,21 @@ import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { apiClient } from "@/lib/api-client";
 import { signOut } from "@/lib/auth-client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import PageContainer from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
+  type ChartConfig
 } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -36,27 +43,39 @@ type AnalyticsResponse = {
 const chartConfig: ChartConfig = {
   totalSales: {
     label: "Total Sales",
-    color: "var(--primary)",
+    color: "var(--primary)"
   },
   reports: {
     label: "Laporan",
-    color: "var(--chart-2)",
-  },
+    color: "var(--chart-2)"
+  }
 };
 
 const currency = new Intl.NumberFormat("id-ID", {
   style: "currency",
   currency: "IDR",
-  maximumFractionDigits: 0,
+  maximumFractionDigits: 0
 });
 
 const dateFormat = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
-  month: "short",
+  month: "short"
 });
+
+function parseChartDate(value: string): Date {
+  const dateOnlyMatch = /^\d{4}-\d{2}-\d{2}$/;
+
+  if (dateOnlyMatch.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  return new Date(value);
+}
 
 export function AdminDashboardTabs() {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +88,9 @@ export function AdminDashboardTabs() {
       setLoading(true);
       setError(null);
       try {
-        const analyticsResult = await apiClient<AnalyticsResponse>("/dashboard/analytics");
+        const analyticsResult = await apiClient<AnalyticsResponse>(
+          "/dashboard/analytics"
+        );
         if (!mounted) return;
         setAnalytics(analyticsResult);
       } catch {
@@ -86,14 +107,31 @@ export function AdminDashboardTabs() {
     };
   }, []);
 
-  const chartData = useMemo(
-    () =>
-      (analytics?.chart ?? []).map((item) => ({
-        ...item,
-        label: dateFormat.format(new Date(item.date)),
-      })),
-    [analytics]
-  );
+  const chartData = useMemo(() => {
+    const source = analytics?.chart ?? [];
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+
+    return source
+      .map((item) => {
+        const date = parseChartDate(item.date);
+        return {
+          ...item,
+          parsedDate: date,
+          label: dateFormat.format(date)
+        };
+      })
+      .filter(
+        (item) => item.parsedDate >= startDate && item.parsedDate <= endDate
+      )
+      .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime())
+      .map(({ parsedDate, ...item }) => item);
+  }, [analytics]);
 
   const onLogout = async () => {
     setIsSigningOut(true);
@@ -126,32 +164,52 @@ export function AdminDashboardTabs() {
             disabled={isSigningOut}
             className="w-full sm:w-auto"
           >
-            {isSigningOut ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+            {isSigningOut ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="mr-2 h-4 w-4" />
+            )}
             Logout
           </Button>
         </div>
       }
     >
       {loading ? (
-        <div className="flex min-h-[300px] items-center justify-center">
+        <div className="flex min-h-75 items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
       ) : error ? (
         <Card>
-          <CardContent className="pt-6 text-sm text-red-500">{error}</CardContent>
+          <CardContent className="pt-6 text-sm text-red-500">
+            {error}
+          </CardContent>
         </Card>
       ) : (
         <Tabs defaultValue="analytics" className="space-y-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="reports">Laporan Harian</TabsTrigger>
-          </TabsList>
+          <div className="mb-1 overflow-x-auto pb-1">
+            <TabsList className="inline-flex h-auto min-w-full items-stretch gap-1 sm:min-w-0">
+              <TabsTrigger
+                value="analytics"
+                className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
+              >
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger
+                value="reports"
+                className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
+              >
+                Laporan Harian
+              </TabsTrigger>
+            </TabsList>
+          </div>
           <TabsContent value="analytics" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Total Harian</CardDescription>
-                  <CardTitle className="text-2xl">{currency.format(analytics?.summary.totalSalesToday ?? 0)}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {currency.format(analytics?.summary.totalSalesToday ?? 0)}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
                   Berdasarkan laporan masuk hari ini.
@@ -160,7 +218,9 @@ export function AdminDashboardTabs() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Laporan Hari Ini</CardDescription>
-                  <CardTitle className="text-2xl">{analytics?.summary.totalReportsToday ?? 0}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {analytics?.summary.totalReportsToday ?? 0}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
                   Jumlah report yang dibuat hari ini.
@@ -169,7 +229,9 @@ export function AdminDashboardTabs() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Total Pesan Terkirim</CardDescription>
-                  <CardTitle className="text-2xl">{analytics?.summary.totalMessagesSent ?? 0}</CardTitle>
+                  <CardTitle className="text-2xl">
+                    {analytics?.summary.totalMessagesSent ?? 0}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
                   Akumulasi laporan yang sudah dikirim ke WA.
@@ -179,18 +241,56 @@ export function AdminDashboardTabs() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Chart Analytics 14 Hari Terakhir</CardTitle>
-                <CardDescription>Tren total sales dan jumlah laporan per hari.</CardDescription>
+                <CardTitle>Chart Analytics 7 Hari Terakhir</CardTitle>
+                <CardDescription>
+                  Tren total sales dan jumlah laporan per hari (termasuk hari
+                  ini).
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={chartConfig} className="h-[260px] md:h-[320px] w-full">
-                  <BarChart data={chartData}>
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-55 w-full sm:h-65 md:h-80"
+                >
+                  <BarChart
+                    data={chartData}
+                    margin={
+                      isMobile
+                        ? { top: 8, right: 4, left: 4, bottom: 0 }
+                        : { top: 12, right: 12, left: 4, bottom: 0 }
+                    }
+                    barCategoryGap={isMobile ? "24%" : "18%"}
+                  >
                     <CartesianGrid vertical={false} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                    <YAxis tickLine={false} axisLine={false} />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      interval={isMobile ? 1 : 0}
+                      minTickGap={isMobile ? 22 : 14}
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                    />
+                    <YAxis
+                      hide={isMobile}
+                      tickLine={false}
+                      axisLine={false}
+                      width={56}
+                      tick={{ fontSize: 12 }}
+                    />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="totalSales" fill="var(--color-totalSales)" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="reports" fill="var(--color-reports)" radius={[6, 6, 0, 0]} />
+                    <Bar
+                      dataKey="totalSales"
+                      fill="var(--color-totalSales)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={isMobile ? 18 : 26}
+                    />
+                    <Bar
+                      dataKey="reports"
+                      fill="var(--color-reports)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={isMobile ? 18 : 26}
+                    />
                   </BarChart>
                 </ChartContainer>
               </CardContent>

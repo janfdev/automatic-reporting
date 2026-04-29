@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const sendWaSchema = z.object({
-  reportId: z.string().uuid("reportId tidak valid"),
+  reportId: z.string().uuid("reportId tidak valid")
 });
 
 export async function POST(req: Request) {
@@ -15,64 +15,89 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = sendWaSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ success: false, error: "Payload tidak valid" }, { status: 400 });
+    return Response.json(
+      { success: false, error: "Payload tidak valid" },
+      { status: 400 }
+    );
   }
   const { reportId } = parsed.data;
 
   const userRec = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
+    where: eq(users.id, session.user.id)
   });
   if (!userRec?.storeId) {
     return Response.json(
-      { success: false, error: "Akun ini belum memiliki outlet (store) yang ditetapkan." },
+      {
+        success: false,
+        error: "Akun ini belum memiliki outlet (store) yang ditetapkan."
+      },
       { status: 400 }
     );
   }
 
   // Ambil data report dari Database
-  const reportList = await db.select().from(dailyReports).where(eq(dailyReports.id, reportId)).limit(1);
+  const reportList = await db
+    .select()
+    .from(dailyReports)
+    .where(eq(dailyReports.id, reportId))
+    .limit(1);
   const report = reportList[0];
 
   if (!report) return new Response("Report not found", { status: 404 });
   if (report.storeId !== userRec.storeId) {
-    return Response.json({ success: false, error: "Forbidden" }, { status: 403 });
+    return Response.json(
+      { success: false, error: "Forbidden" },
+      { status: 403 }
+    );
   }
 
-  const storeList = await db.select().from(store).where(eq(store.id, report.storeId)).limit(1);
+  const storeList = await db
+    .select()
+    .from(store)
+    .where(eq(store.id, report.storeId))
+    .limit(1);
   const storeData = storeList[0];
 
   const date = report.reportDate ? new Date(report.reportDate) : new Date();
-  const dateString = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateString = date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
 
-  // Parsing JSON items 
+  // Parsing JSON items
   const itemOos = Array.isArray(report.itemOos) ? report.itemOos : [];
-  const oosString = itemOos.length > 0 
-    ? itemOos.map((item: Record<string, string>) => `- ${item.name}`).join('\n') 
-    : "- Tidak ada";
+  const oosString =
+    itemOos.length > 0
+      ? itemOos
+          .map((item: Record<string, string>) => `- ${item.name}`)
+          .join("\n")
+      : "- Tidak ada";
 
   const totalSales = report.totalSales || 0;
   const targetSpd = storeData?.targetSpd || 0;
-  const pencapaian = targetSpd > 0 ? ((totalSales / targetSpd) * 100).toFixed(0) : 0;
+  const pencapaian =
+    targetSpd > 0 ? ((totalSales / targetSpd) * 100).toFixed(0) : 0;
 
   // Coba meniru template
   const message = `*Laporan Sales Tanggal ${dateString}*
 
-*Store: ${storeData?.name || '-'}*
-Tahun Oprasional : ${storeData?.operationalYear || '-'}
-Nama SE: ${storeData?.seName || '-'}
+*Store: ${storeData?.name || "-"}*
+Tahun Oprasional : ${storeData?.operationalYear || "-"}
+Nama SE: ${storeData?.seName || "-"}
 Jumlah Shift : 3 (Default)
-Jumlah SA : ${storeData?.saCount || '-'}
-Jam Operasional: ${storeData?.operationalHours || '-'}
-Cluster Harga : ${storeData?.priceCluster || '-'}
+Jumlah SA : ${storeData?.saCount || "-"}
+Jam Operasional: ${storeData?.operationalHours || "-"}
+Cluster Harga : ${storeData?.priceCluster || "-"}
 PL Ytd (Data Dummy) : -
 Kondisi store : *Sehat* 🟢
 
 *Rincian Sales*
-Groceries Bright  : Rp ${(report.salesGroceries || 0).toLocaleString('id-ID')}
-Sales LPG           : Rp ${(report.salesLpg || 0).toLocaleString('id-ID')}
-Pelumas                : Rp ${(report.salesPelumas || 0).toLocaleString('id-ID')}
-Total Sales  (SPD) : Rp ${totalSales.toLocaleString('id-ID')}
-Target SPD store   : Rp ${targetSpd.toLocaleString('id-ID')}
+Groceries Bright  : Rp ${(report.salesGroceries || 0).toLocaleString("id-ID")}
+Sales LPG           : Rp ${(report.salesLpg || 0).toLocaleString("id-ID")}
+Pelumas                : Rp ${(report.salesPelumas || 0).toLocaleString("id-ID")}
+Total Sales  (SPD) : Rp ${totalSales.toLocaleString("id-ID")}
+Target SPD store   : Rp ${targetSpd.toLocaleString("id-ID")}
 % Pencapaian Target : ${pencapaian}%
 
 *Info SC & MD*
@@ -94,43 +119,77 @@ Sales Per Day MTD : Menunggu Kalkulasi
 
 *Shrinkage Management*
 (Losses, waste, own use)
-Waste : ${(report.waste || 0).toLocaleString('id-ID')}
-Losses : ${(report.losses || 0).toLocaleString('id-ID')}
+Waste : ${(report.waste || 0).toLocaleString("id-ID")}
+Losses : ${(report.losses || 0).toLocaleString("id-ID")}
 Own use : -
 
 *Need Support:*
-${report.needSupport || '-'}
+${report.needSupport || "-"}
 
 *Semangat! 💪🏻*
 Have a *Bright* Day! 🌤️`;
 
-  // Kirim ke Gateway (Contoh API Fonnte)
   try {
-    if (!process.env.FONNTE_TOKEN || !process.env.WA_TUJUAN_LAPORAN) {
+    const token = process.env.FONNTE_TOKEN;
+    const target = process.env.WA_TUJUAN_LAPORAN;
+
+    if (!token || !target) {
       return Response.json(
         { success: false, error: "Konfigurasi gateway belum lengkap." },
         { status: 500 }
       );
     }
 
+    const formData = new FormData();
+    formData.append("target", target);
+    formData.append("message", message);
+
     const res = await fetch("https://api.fonnte.com/send", {
       method: "POST",
-      headers: { Authorization: process.env.FONNTE_TOKEN },
-      body: new URLSearchParams({
-        target: process.env.WA_TUJUAN_LAPORAN,
-        message: message,
-      }),
+      headers: { Authorization: token },
+      body: formData
     });
 
-    if (!res.ok) {
+    const rawResponse = await res.text();
+    let fonnteResponse: unknown = rawResponse;
+
+    try {
+      fonnteResponse = JSON.parse(rawResponse);
+    } catch {
+      // Fonnte may return plain text on error.
+    }
+
+    const responseObject =
+      fonnteResponse && typeof fonnteResponse === "object"
+        ? (fonnteResponse as Record<string, unknown>)
+        : null;
+    const isFonnteSuccess =
+      res.ok && responseObject
+        ? responseObject.status === true || responseObject.Status === true
+        : res.ok;
+
+    if (!isFonnteSuccess) {
+      const fallbackReason = rawResponse
+        ? rawResponse
+        : "Gateway menolak request pengiriman.";
+      const reason =
+        responseObject?.reason ?? responseObject?.detail ?? fallbackReason;
       return Response.json(
-        { success: false, error: "Gateway menolak request pengiriman." },
+        {
+          success: false,
+          error: String(reason),
+          gatewayResponse: fonnteResponse
+        },
         { status: 502 }
       );
     }
 
-    return Response.json({ success: true });
-  } catch {
-    return Response.json({ success: false, error: "Gateway Error" }, { status: 500 });
+    return Response.json({ success: true, gatewayResponse: fonnteResponse });
+  } catch (error) {
+    console.error("Error sending WhatsApp report:", error);
+    return Response.json(
+      { success: false, error: "Gateway Error" },
+      { status: 500 }
+    );
   }
 }

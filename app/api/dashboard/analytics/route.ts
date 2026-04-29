@@ -5,7 +5,11 @@ import { dailyReports } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 function formatDateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function getLastNDates(days: number): string[] {
@@ -50,7 +54,7 @@ export async function GET(req: Request) {
       totalMessagesSent:
         sql<number>`coalesce(sum(case when ${dailyReports.isPushedToWa} = true then 1 else 0 end), 0)`.as(
           "total_messages_sent"
-        ),
+        )
     })
     .from(dailyReports);
 
@@ -58,7 +62,7 @@ export async function GET(req: Request) {
     .select({
       reportDate: dailyReports.reportDate,
       totalSales: dailyReports.totalSales,
-      isPushedToWa: dailyReports.isPushedToWa,
+      isPushedToWa: dailyReports.isPushedToWa
     })
     .from(dailyReports)
     .where(gte(dailyReports.reportDate, fourteenDaysAgo))
@@ -90,7 +94,7 @@ export async function GET(req: Request) {
       id: dailyReports.id,
       reportDate: dailyReports.reportDate,
       totalSales: dailyReports.totalSales,
-      isPushedToWa: dailyReports.isPushedToWa,
+      isPushedToWa: dailyReports.isPushedToWa
     })
     .from(dailyReports)
     .where(
@@ -107,8 +111,8 @@ export async function GET(req: Request) {
       totalSalesToday: Number(totals?.totalSalesToday ?? 0),
       totalReportsToday: Number(totals?.totalReportsToday ?? 0),
       totalMessagesSent: Number(totals?.totalMessagesSent ?? 0),
-      latestOwnReport: latestReport ?? null,
+      latestOwnReport: latestReport ?? null
     },
-    chart,
+    chart
   });
 }

@@ -1,4 +1,3 @@
-
 import { NavGroup } from "@/types";
 
 /**
@@ -24,14 +23,6 @@ export const navGroups: NavGroup[] = [
         url: "/admin/dashboard/users",
         icon: "teams",
         shortcut: ["u", "u"],
-        isActive: false,
-        items: []
-      },
-      {
-        title: "Products",
-        url: "/admin/dashboard/product",
-        icon: "product",
-        shortcut: ["p", "p"],
         isActive: false,
         items: []
       },

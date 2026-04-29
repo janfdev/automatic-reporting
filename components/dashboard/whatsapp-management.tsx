@@ -3,8 +3,21 @@
 import { useEffect, useState } from "react";
 import { Loader2, Plus, QrCode, RefreshCcw, Smartphone } from "lucide-react";
 import toast from "react-hot-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +27,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 
 type Device = {
@@ -77,7 +90,7 @@ export function WhatsAppManagement() {
       const res = await fetch("/api/whatsapp/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, device: newDevice }),
+        body: JSON.stringify({ name: newName, device: newDevice })
       });
       const json = await res.json();
       if (json.status) {
@@ -105,7 +118,7 @@ export function WhatsAppManagement() {
       const res = await fetch("/api/whatsapp/qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ device: deviceNumber }),
+        body: JSON.stringify({ device: deviceNumber })
       });
       const json = await res.json();
       if (json.status && json.url) {
@@ -124,7 +137,7 @@ export function WhatsAppManagement() {
 
   if (loading && devices.length === 0) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
+      <div className="flex min-h-75 items-center justify-center">
         <Loader2 className="h-5 w-5 animate-spin" />
       </div>
     );
@@ -133,17 +146,29 @@ export function WhatsAppManagement() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <CardHeader className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <CardTitle>WhatsApp Devices</CardTitle>
-            <CardDescription>Kelola perangkat yang terhubung dengan layanan Fonnte.</CardDescription>
+            <CardDescription>
+              Kelola perangkat yang terhubung dengan layanan Fonnte.
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={loadDevices} disabled={loading}>
-              <RefreshCcw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:items-center">
+            <Button
+              variant="outline"
+              onClick={loadDevices}
+              disabled={loading}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCcw
+                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
-            <Button onClick={() => setIsAddOpen(true)}>
+            <Button
+              onClick={() => setIsAddOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Device
             </Button>
@@ -153,8 +178,58 @@ export function WhatsAppManagement() {
           {error ? (
             <div className="text-sm text-red-500 mb-4">{error}</div>
           ) : null}
-          <div className="rounded-md border overflow-x-auto">
-            <Table className="min-w-[600px]">
+
+          <div className="space-y-3 md:hidden">
+            {devices.map((dev) => (
+              <div key={dev.device} className="rounded-lg border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-muted-foreground" />
+                      <p className="truncate text-sm font-semibold">
+                        {dev.name}
+                      </p>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {dev.device}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      dev.status === "connect"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {dev.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs capitalize text-muted-foreground">
+                  Paket: {dev.package || "Free"}
+                </p>
+                {dev.status === "disconnect" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleShowQr(dev.device)}
+                    className="mt-3 w-full"
+                  >
+                    <QrCode className="mr-2 h-4 w-4" />
+                    Scan QR
+                  </Button>
+                )}
+              </div>
+            ))}
+            {devices.length === 0 && (
+              <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+                Tidak ada perangkat yang ditemukan. Silakan tambahkan perangkat
+                baru.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-md border md:block">
+            <Table className="min-w-175 lg:min-w-full">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nama Device</TableHead>
@@ -185,7 +260,9 @@ export function WhatsAppManagement() {
                         {dev.status}
                       </span>
                     </TableCell>
-                    <TableCell className="capitalize">{dev.package || "Free"}</TableCell>
+                    <TableCell className="capitalize">
+                      {dev.package || "Free"}
+                    </TableCell>
                     <TableCell className="text-right">
                       {dev.status === "disconnect" && (
                         <Button
@@ -202,8 +279,12 @@ export function WhatsAppManagement() {
                 ))}
                 {devices.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                      Tidak ada perangkat yang ditemukan. Silakan tambahkan perangkat baru.
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      Tidak ada perangkat yang ditemukan. Silakan tambahkan
+                      perangkat baru.
                     </TableCell>
                   </TableRow>
                 )}
@@ -215,43 +296,58 @@ export function WhatsAppManagement() {
 
       {/* Add Device Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-125">
           <DialogHeader>
             <DialogTitle>Tambah Perangkat Fonnte</DialogTitle>
             <DialogDescription>
-              Masukkan detail perangkat untuk dihubungkan. Anda akan perlu memindai QR code dari aplikasi WhatsApp nantinya.
+              Masukkan detail perangkat untuk dihubungkan. Anda akan perlu
+              memindai QR code dari aplikasi WhatsApp nantinya.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddDevice}>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Nama Device</Label>
+              <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
+                <Label htmlFor="name" className="text-left sm:text-right">
+                  Nama Device
+                </Label>
                 <Input
                   id="name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Misal: WA Admin Indomaret"
-                  className="col-span-3"
+                  className="sm:col-span-3"
                   required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="device" className="text-right">Nomor WA</Label>
+              <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
+                <Label htmlFor="device" className="text-left sm:text-right">
+                  Nomor WA
+                </Label>
                 <Input
                   id="device"
                   value={newDevice}
                   onChange={(e) => setNewDevice(e.target.value)}
                   placeholder="Misal: 08123456789 (Mulai tanpa 62)"
-                  className="col-span-3"
+                  className="sm:col-span-3"
                   required
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)} disabled={adding}>
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddOpen(false)}
+                disabled={adding}
+                className="w-full sm:w-auto"
+              >
                 Batal
               </Button>
-              <Button type="submit" disabled={adding}>
+              <Button
+                type="submit"
+                disabled={adding}
+                className="w-full sm:w-auto"
+              >
                 {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Tambah
               </Button>
@@ -266,30 +362,56 @@ export function WhatsAppManagement() {
           <DialogHeader>
             <DialogTitle>Scan QR Code</DialogTitle>
             <DialogDescription>
-              Buka aplikasi WhatsApp Anda di perangkat <strong>{selectedDevice}</strong>, kemudian pilih "Tautkan Perangkat" dan scan kode QR ini.
+              Buka aplikasi WhatsApp Anda di perangkat{" "}
+              <strong>{selectedDevice}</strong>, kemudian pilih "Tautkan
+              Perangkat" dan scan kode QR ini.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg">
+          <div className="flex flex-col items-center justify-center rounded-lg bg-white p-4 sm:p-6">
             {fetchingQr ? (
               <div className="flex flex-col items-center gap-4 py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-gray-500">Memuat QR Code Fonnte...</p>
+                <p className="text-sm text-gray-500">
+                  Memuat QR Code Fonnte...
+                </p>
               </div>
             ) : qrBase64 ? (
               <div className="flex flex-col items-center gap-4">
-                <img src={`data:image/png;base64,${qrBase64}`} alt="WhatsApp QR Code" className="w-[264px] h-[264px]" />
-                <p className="text-xs text-gray-500 text-center max-w-[260px]">QR Code ini akan otomatis diperbarui atau kadaluarsa, segera scan sebelum waktunya habis.</p>
+                <img
+                  src={`data:image/png;base64,${qrBase64}`}
+                  alt="WhatsApp QR Code"
+                  className="h-55 w-55 sm:h-66 sm:w-66"
+                />
+                <p className="max-w-65 text-center text-xs text-gray-500">
+                  QR Code ini akan otomatis diperbarui atau kadaluarsa, segera
+                  scan sebelum waktunya habis.
+                </p>
               </div>
             ) : (
-              <p className="text-red-500 text-sm">QR Timeout atau Gagal Dimuat.</p>
+              <p className="text-red-500 text-sm">
+                QR Timeout atau Gagal Dimuat.
+              </p>
             )}
           </div>
-          <DialogFooter className="sm:justify-between">
-            <Button type="button" variant="ghost" onClick={() => handleShowQr(selectedDevice)} disabled={fetchingQr}>
+          <DialogFooter className="flex-col gap-2 sm:justify-between">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleShowQr(selectedDevice)}
+              disabled={fetchingQr}
+              className="w-full sm:w-auto"
+            >
               <RefreshCcw className="mr-2 h-4 w-4" />
               Refresh QR
             </Button>
-            <Button type="button" onClick={() => { setIsQrOpen(false); loadDevices(); }}>
+            <Button
+              type="button"
+              onClick={() => {
+                setIsQrOpen(false);
+                loadDevices();
+              }}
+              className="w-full sm:w-auto"
+            >
               Tutup & Cek Status
             </Button>
           </DialogFooter>
