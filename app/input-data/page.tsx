@@ -1,14 +1,15 @@
-"use client"
+"use client";
+
 import { useState } from 'react';
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
 import { Button } from '@/components/ui/button';
-import { Send, Loader2, LogOut } from 'lucide-react';
-import { ThemeModeToggle } from '@/components/themes/theme-mode-toggle';
+import { Send, Loader2 } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+import { AppHeader } from '@/components/layout/app-header';
 import { reportSchema, ReportFormValues } from "@/lib/validations/report";
 import { SalesCard } from "@/components/input-data/sales-card";
 import { DistributionCard } from "@/components/input-data/distribution-card";
@@ -17,21 +18,6 @@ import { StockCard } from "@/components/input-data/stock-card";
 import { ShrinkageCard } from "@/components/input-data/shrinkage-card";
 import { SupportCard } from "@/components/input-data/support-card";
 import { signOut, useSession } from "@/lib/auth-client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-function getInitials(nameOrEmail: string | undefined): string {
-  if (!nameOrEmail) return "U";
-  const clean = nameOrEmail.trim();
-  if (!clean) return "U";
-
-  if (clean.includes("@")) {
-    return clean[0]?.toUpperCase() ?? "U";
-  }
-
-  const words = clean.split(/\s+/).filter(Boolean);
-  if (words.length === 1) return words[0].slice(0, 1).toUpperCase();
-  return `${words[0][0] ?? ""}${words[1][0] ?? ""}`.toUpperCase();
-}
 
 export default function InputDataPage() {
   const router = useRouter();
@@ -63,9 +49,7 @@ export default function InputDataPage() {
   const saveReport = async (values: ReportFormValues, isPushedToWa: boolean) => {
     const response = await fetch('/api/reports', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...values, isPushedToWa }),
     });
 
@@ -73,7 +57,6 @@ export default function InputDataPage() {
       const result = await response.json();
       throw new Error(result.error || 'Gagal menyimpan laporan');
     }
-
     return await response.json();
   };
 
@@ -101,15 +84,11 @@ export default function InputDataPage() {
 
       const waResponse = await fetch('/api/send-wa', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportId }),
       });
 
-      if (!waResponse.ok) {
-        throw new Error('Gagal mengirim ke WhatsApp Gateway');
-      }
+      if (!waResponse.ok) throw new Error('Gagal mengirim ke WhatsApp Gateway');
 
       toast.success("Laporan berhasil dikirim ke WhatsApp!", { id: toastId });
       reset();
@@ -136,64 +115,20 @@ export default function InputDataPage() {
     <TooltipProvider>
       <FormProvider {...methods}>
         <div className="min-h-screen bg-muted/30 pb-32 md:pb-24">
-          <header className="bg-background border-b px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 sticky top-0 z-10">
-            <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  P
-                </div>
-                <div className="flex flex-col leading-tight">
-                  <span className="font-bold text-sm tracking-widest text-foreground">PERTAMINA</span>
-                  <span className="text-xs text-red-600 font-semibold tracking-widest">RETAIL</span>
-                </div>
-              </div>
-              <div className="h-10 w-px bg-border hidden md:block mx-2"></div>
-              <div>
-                <h1 className="text-lg md:text-xl font-bold text-foreground">Sales Daily Report</h1>
-                <p className="text-xs md:text-sm text-muted-foreground">Non - Fuel Retail Sales & Operation</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between w-full md:w-auto gap-3 md:gap-4">
-              <div className="text-sm text-muted-foreground hidden md:block">
-                Internal Operations System
-              </div>
-              <div className="flex items-center gap-2 rounded-full border px-2.5 py-1.5 bg-muted/40">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? session?.user?.email ?? "User"} />
-                  <AvatarFallback>{getInitials(session?.user?.name ?? session?.user?.email)}</AvatarFallback>
-                </Avatar>
-                <div className="hidden sm:flex flex-col leading-tight">
-                  <span className="text-xs font-medium text-foreground">
-                    {session?.user?.name ?? "User"}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {session?.user?.email ?? "Memuat email..."}
-                  </span>
-                </div>
-              </div>
-              <ThemeModeToggle />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onLogout}
-                disabled={isSigningOut}
-                className="gap-2"
-              >
-                {isSigningOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </div>
-          </header>
+          <AppHeader 
+             session={session} 
+             isSigningOut={isSigningOut} 
+             onLogout={onLogout} 
+          />
 
           <main className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 mt-2 md:mt-4">
-            <form className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              <SalesCard />
-              <DistributionCard />
-              <OosCard />
-              <StockCard />
-              <ShrinkageCard />
-              <SupportCard />
+            <form className="columns-1 lg:columns-2 gap-6 space-y-6">
+              <div className="break-inside-avoid"><SalesCard /></div>
+              <div className="break-inside-avoid"><ShrinkageCard /></div>
+              <div className="break-inside-avoid"><StockCard /></div>
+              <div className="break-inside-avoid"><DistributionCard /></div>
+              <div className="break-inside-avoid"><OosCard /></div>
+              <div className="break-inside-avoid"><SupportCard /></div>
             </form>
           </main>
 
