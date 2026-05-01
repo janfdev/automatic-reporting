@@ -1,6 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
-import ThemeProvider from "@/components/themes/theme-provider";
+import  ThemeProvider  from "@/components/themes/theme-provider";
 
 export const metadata: Metadata = {
   title: "Input Data",
@@ -13,10 +13,11 @@ export default function InputDataLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning={true}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="flex-1 min-h-screen">{children}</div>
-      </ThemeProvider>
-    </html>
+    // Hapus tag <html> di sini
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <div className="flex-1 min-h-screen">
+        {children}
+      </div>
+    </ThemeProvider>
   );
 }
