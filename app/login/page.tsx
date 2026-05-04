@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import Logo from "@/public/Logo_pertamina.png"
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,9 +67,9 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px] bg-white rounded-lg border border-[#e5e5e5] shadow-sm p-8">
         {/* Header Logo & Slogan */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="relative w-40 h-12 mb-4">
+          <div className="relative w-44 h-12 mb-4">
             <Image
-              src="/logo-pertamina-retail.png"
+              src={Logo}
               alt="Pertamina Retail Logo"
               fill
               className="object-contain"
