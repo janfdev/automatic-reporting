@@ -35,11 +35,22 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const { searchParams } = new URL(req.url);
+  const storeId = searchParams.get("storeId");
+
   const startToday = new Date();
   startToday.setHours(0, 0, 0, 0);
 
+  const startOfMonth = new Date(startToday.getFullYear(), startToday.getMonth(), 1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const startOfYear = new Date(startToday.getFullYear(), 0, 1);
+  startOfYear.setHours(0, 0, 0, 0);
+
   const fourteenDaysAgo = new Date(startToday);
   fourteenDaysAgo.setDate(startToday.getDate() - 13);
+
+  const filterCondition = storeId && storeId !== "all" ? eq(dailyReports.storeId, storeId) : undefined;
 
   const [totals] = await db
     .select({
@@ -54,9 +65,18 @@ export async function GET(req: Request) {
       totalMessagesSent:
         sql<number>`coalesce(sum(case when ${dailyReports.isPushedToWa} = true then 1 else 0 end), 0)`.as(
           "total_messages_sent"
+        ),
+      totalSalesMTD:
+        sql<number>`coalesce(sum(case when ${dailyReports.reportDate} >= ${startOfMonth} then ${dailyReports.totalSales} else 0 end), 0)`.as(
+          "total_sales_mtd"
+        ),
+      totalSalesYTD:
+        sql<number>`coalesce(sum(case when ${dailyReports.reportDate} >= ${startOfYear} then ${dailyReports.totalSales} else 0 end), 0)`.as(
+          "total_sales_ytd"
         )
     })
-    .from(dailyReports);
+    .from(dailyReports)
+    .where(filterCondition);
 
   const rows = await db
     .select({
@@ -65,7 +85,7 @@ export async function GET(req: Request) {
       isPushedToWa: dailyReports.isPushedToWa
     })
     .from(dailyReports)
-    .where(gte(dailyReports.reportDate, fourteenDaysAgo))
+    .where(and(gte(dailyReports.reportDate, fourteenDaysAgo), filterCondition))
     .orderBy(desc(dailyReports.reportDate));
 
   const mapByDate = new Map<
@@ -89,6 +109,10 @@ export async function GET(req: Request) {
 
   const chart = Array.from(mapByDate.values());
 
+  const latestReportCondition = storeId && storeId !== "all" 
+    ? and(eq(dailyReports.authorId, session.user.id), gte(dailyReports.reportDate, fourteenDaysAgo), eq(dailyReports.storeId, storeId))
+    : and(eq(dailyReports.authorId, session.user.id), gte(dailyReports.reportDate, fourteenDaysAgo));
+
   const [latestReport] = await db
     .select({
       id: dailyReports.id,
@@ -97,12 +121,7 @@ export async function GET(req: Request) {
       isPushedToWa: dailyReports.isPushedToWa
     })
     .from(dailyReports)
-    .where(
-      and(
-        eq(dailyReports.authorId, session.user.id),
-        gte(dailyReports.reportDate, fourteenDaysAgo)
-      )
-    )
+    .where(latestReportCondition)
     .orderBy(desc(dailyReports.reportDate))
     .limit(1);
 
@@ -111,6 +130,8 @@ export async function GET(req: Request) {
       totalSalesToday: Number(totals?.totalSalesToday ?? 0),
       totalReportsToday: Number(totals?.totalReportsToday ?? 0),
       totalMessagesSent: Number(totals?.totalMessagesSent ?? 0),
+      totalSalesMTD: Number(totals?.totalSalesMTD ?? 0),
+      totalSalesYTD: Number(totals?.totalSalesYTD ?? 0),
       latestOwnReport: latestReport ?? null
     },
     chart

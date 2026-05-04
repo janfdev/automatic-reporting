@@ -23,6 +23,7 @@ import {
   type ChartConfig
 } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { ReportsManagement } from "./reports-management";
 
@@ -31,6 +32,8 @@ type AnalyticsResponse = {
     totalSalesToday: number;
     totalReportsToday: number;
     totalMessagesSent: number;
+    totalSalesMTD: number;
+    totalSalesYTD: number;
   };
   chart: Array<{
     date: string;
@@ -39,6 +42,8 @@ type AnalyticsResponse = {
     waSent: number;
   }>;
 };
+
+type Store = { id: string; name: string };
 
 const chartConfig: ChartConfig = {
   totalSales: {
@@ -80,16 +85,35 @@ export function AdminDashboardTabs() {
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStore, setSelectedStore] = useState<string>("all");
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadStores() {
+      try {
+        const storesResult = await apiClient<Store[]>("/dashboard/stores");
+        if (!mounted) return;
+        setStores(storesResult);
+      } catch (error) {
+        console.error("Failed to fetch stores", error);
+      }
+    }
+    void loadStores();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
+    async function loadAnalytics() {
       setLoading(true);
       setError(null);
       try {
         const analyticsResult = await apiClient<AnalyticsResponse>(
-          "/dashboard/analytics"
+          `/dashboard/analytics?storeId=${selectedStore}`
         );
         if (!mounted) return;
         setAnalytics(analyticsResult);
@@ -101,11 +125,11 @@ export function AdminDashboardTabs() {
       }
     }
 
-    void load();
+    void loadAnalytics();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [selectedStore]);
 
   const chartData = useMemo(() => {
     const source = analytics?.chart ?? [];
@@ -186,24 +210,42 @@ export function AdminDashboardTabs() {
         </Card>
       ) : (
         <Tabs defaultValue="analytics" className="space-y-4">
-          <div className="mb-1 overflow-x-auto pb-1">
-            <TabsList className="inline-flex h-auto min-w-full items-stretch gap-1 sm:min-w-0">
-              <TabsTrigger
-                value="analytics"
-                className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
-              >
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger
-                value="reports"
-                className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
-              >
-                Laporan Harian
-              </TabsTrigger>
-            </TabsList>
+          <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="overflow-x-auto pb-1 max-w-full">
+              <TabsList className="inline-flex h-auto items-stretch gap-1">
+                <TabsTrigger
+                  value="analytics"
+                  className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
+                >
+                  Analytics
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reports"
+                  className="flex-1 px-3 py-2 text-xs sm:flex-none sm:text-sm"
+                >
+                  Laporan Harian
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="w-full sm:w-[220px]">
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Store" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Store</SelectItem>
+                  {stores.map((store) => (
+                    <SelectItem key={store.id} value={store.id}>
+                      {store.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <TabsContent value="analytics" className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:gap-4 xl:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               <Card>
                 <CardHeader className="pb-2">
                   <CardDescription>Total Harian</CardDescription>
@@ -213,6 +255,28 @@ export function AdminDashboardTabs() {
                 </CardHeader>
                 <CardContent className="text-xs text-muted-foreground">
                   Berdasarkan laporan masuk hari ini.
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Sales MTD</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {currency.format(analytics?.summary.totalSalesMTD ?? 0)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-muted-foreground">
+                  Bulan ini.
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Sales YTD</CardDescription>
+                  <CardTitle className="text-2xl">
+                    {currency.format(analytics?.summary.totalSalesYTD ?? 0)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-xs text-muted-foreground">
+                  Tahun ini.
                 </CardContent>
               </Card>
               <Card>
