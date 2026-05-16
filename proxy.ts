@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
   // --- 2. Proteksi Session & Rute ---
   const cookieHeader = request.headers.get("cookie") ?? "";
   const sessionResponse = await fetch(
-    new URL("/api/auth/session", request.url),
+    new URL("/api/auth/get-session", request.url),
     {
       method: "GET",
       headers: {
@@ -65,14 +65,9 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/admin") && sessionUser?.role !== "admin") {
     return NextResponse.redirect(new URL("/input-data", request.url));
   }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/api/send-wa/:path*",
-    "/api/auth/sign-in"
-  ]
+  matcher: ["/admin/:path*", "/api/send-wa/:path*", "/api/auth/sign-in"]
 };

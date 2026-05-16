@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
-import Logo from "@/public/Logo_pertamina.png"
+import Logo from "@/public/Logo_pertamina.png";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function LoginPage() {
         return;
       }
 
-      const sessionResponse = await fetch("/api/auth/session", {
+      const sessionResponse = await fetch("/api/auth/get-session", {
         method: "GET",
         credentials: "include"
       });
