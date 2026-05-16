@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Copy, ExternalLink, MessageSquareText } from "lucide-react";
+import { Loader2, Copy, ExternalLink, MessageSquareText, ChevronDown, ChevronUp } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppHeader } from "@/components/layout/app-header";
 import { reportSchema, ReportFormValues } from "@/lib/validations/report";
@@ -38,6 +38,9 @@ export default function InputDataPage() {
   const [previewWaLink, setPreviewWaLink] = useState("");
   const [waTarget, setWaTarget] = useState("");
   const { data: session } = useSession();
+
+  // State kontrol panel bawah
+  const [isBarVisible, setIsBarVisible] = useState(false);
 
   const methods = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema) as Resolver<ReportFormValues>,
@@ -162,22 +165,69 @@ export default function InputDataPage() {
             onLogout={onLogout}
           />
 
-          <main className="mx-auto mt-1 w-full max-w-7xl px-6 py-6 sm:px-4 md:mt-3 md:px-6 md:py-6 lg:px-8">
-            <form className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-15">
+          <main className="mx-auto mt-1 w-full max-w-7xl px-4 py-4 md:mt-3 md:px-6 md:py-6 lg:px-8">
+            
+            {/* =========================================================================
+                1. TAMPILAN KHUSUS MOBILE & TABLET (Urutan Vertikal Semuanya)
+                ========================================================================= */}
+            <form className="flex flex-col gap-6 lg:hidden">
               <SalesCard />
-              <DistributionCard />
-              <OosCard />
-              <StockCard />
               <ShrinkageCard />
+              <StockCard />
+              <OosCard />
+              <DistributionCard />
               <SupportCard />
             </form>
+
+            {/* =========================================================================
+                2. TAMPILAN KHUSUS DESKTOP (Grid Sejajar & Tinggi Mengikuti Sampingnya)
+                ========================================================================= */}
+            <form className="hidden lg:grid grid-cols-2 gap-6 items-stretch">
+              {/* Baris 1 */}
+              <SalesCard />
+              <ShrinkageCard />
+              
+              {/* Baris 2 */}
+              <StockCard />
+              <DistributionCard /> {/* Mengikuti tinggi SalesCard secara horizontal */}
+              
+              {/* Baris 3 */}
+              <OosCard />
+              <SupportCard />
+            </form>
+
           </main>
 
-          <div className="fixed bottom-0  left-0 right-0 z-20 border-t bg-background/95 p-3 backdrop-blur md:p-4">
-            <div className="mx-auto w-full max-w-4xl space-y-3">
-              <div className="grid gap-3 rounded-lg border bg-background p-3 md:grid-cols-[1fr_auto] md:items-end">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium">
+          {/* =========================================================================
+              STICKY & FLOATING ACTIONS (PANEL WHATSAPP DENGAN TOGGLE RESPONSIVE)
+              ========================================================================= */}
+          
+          {/* --- Floating Button: Muncul di pojok saat panel ditutup --- */}
+          {!isBarVisible && (
+            <div className="fixed bottom-4 right-4 z-30 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <Button
+                type="button"
+                onClick={() => setIsBarVisible(true)}
+                className="rounded-full shadow-xl bg-emerald-600 hover:bg-emerald-700 text-white gap-2 px-4 h-11 border-0"
+              >
+                <MessageSquareText className="w-4 h-4" />
+                <span className="text-xs font-semibold">Buka Panel WA</span>
+                <ChevronUp className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* --- Sticky Bottom Panel --- */}
+          <div 
+            className={`fixed bottom-0 left-0 right-0 z-20 border-t bg-background/95 p-4 backdrop-blur transition-transform duration-300 ease-in-out ${
+              isBarVisible ? "translate-y-0" : "translate-y-full"
+            }`}
+          >
+            <div className="mx-auto w-full max-w-4xl relative">
+              
+              <div className="grid gap-3 rounded-lg border bg-background p-4 md:grid-cols-[1fr_auto] md:items-end">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">
                     Nomor tujuan WhatsApp opsional
                   </label>
                   <Input
@@ -185,37 +235,57 @@ export default function InputDataPage() {
                     onChange={(e) => setWaTarget(e.target.value)}
                     placeholder="62812xxxxxxx"
                     inputMode="tel"
+                    className="max-w-md"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
                     Kosongkan jika hanya ingin preview dan salin teks. wa.me
                     tidak bisa langsung kirim ke grup, jadi untuk grup gunakan
                     tombol salin.
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  onClick={handleSubmit(onPreviewWA)}
-                  disabled={isSending}
-                  className="w-full rounded-md border-0 bg-emerald-600 px-4 text-white hover:bg-emerald-700 disabled:opacity-50 md:w-auto md:px-8"
-                >
-                  {isSending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <MessageSquareText className="w-4 h-4 mr-2" />
-                  )}
-                  Simpan & Preview WA
-                </Button>
+
+                {/* Wrapper Tombol Aksi Bersandingan (Selalu Berjejer ke Bawah / Vertikal) */}
+                <div className="flex flex-col gap-2 w-full md:w-auto justify-center items-center">
+                  
+                  {/* Tombol Utama: Simpan & Preview */}
+                  <Button
+                    type="button"
+                    onClick={handleSubmit(onPreviewWA)}
+                    disabled={isSending}
+                    className="w-full sm:w-48 rounded-md border-0 bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-50 gap-2"
+                  >
+                    {isSending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <MessageSquareText className="w-4 h-4" />
+                    )}
+                    <span>Simpan & Preview WA</span>
+                  </Button>
+
+                  {/* Tombol Sembunyikan */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsBarVisible(false)}
+                    className="w-full sm:w-48 gap-2 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    <span>Sembunyikan</span>
+                  </Button>
+
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Dialog Preview */}
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
             <DialogContent className="max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Preview pesan WhatsApp</DialogTitle>
                 <DialogDescription>
                   Periksa teks terlebih dulu. Untuk grup WhatsApp, salin teks
-                  lalu kirim manual karena wa.me tidak mendukung tujuan grup
+                  laku kirim manual karena wa.me tidak mendukung tujuan grup
                   langsung.
                 </DialogDescription>
               </DialogHeader>
@@ -240,7 +310,7 @@ export default function InputDataPage() {
                   variant="outline"
                   onClick={copyPreviewMessage}
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-4 w-4 mr-2" />
                   Salin teks
                 </Button>
                 <Button
@@ -248,7 +318,7 @@ export default function InputDataPage() {
                   onClick={openWaLink}
                   disabled={!previewWaLink}
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-4 w-4 mr-2" />
                   Buka WhatsApp
                 </Button>
               </DialogFooter>

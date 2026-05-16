@@ -13,7 +13,7 @@ export function ShrinkageCard() {
   const { control } = useFormContext<ReportFormValues>();
 
   return (
-    <Card className="border-0 shadow-sm rounded-xl">
+    <Card className="border-0 shadow-sm rounded-xl h-auto">
       <CardHeader className="pb-4">
         <CardTitle className="text-red-500 flex items-center gap-2 text-sm font-bold tracking-wide">
           <AlertTriangle className="w-4 h-4" />
