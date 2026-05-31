@@ -54,7 +54,7 @@ export async function proxy(request: NextRequest) {
   const sessionUser = sessionPayload?.user;
 
   // Jika mencoba akses rute terproteksi tanpa login
-  const isProtectedRoute = ["/admin"].some((p) => pathname.startsWith(p));
+  const isProtectedRoute = ["/admin", "/input-data"].some((p) => pathname.startsWith(p));
   if (isProtectedRoute && !sessionUser) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
@@ -69,5 +69,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/send-wa/:path*", "/api/auth/sign-in"]
+  matcher: ["/admin/:path*", "/input-data/:path*", "/api/send-wa/:path*", "/api/auth/sign-in"]
 };

@@ -94,7 +94,10 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
           {/* User Profile */}
           <div className="flex items-center gap-3 pl-2 border-l ml-2">
             <Avatar className="h-9 w-9 border-2 border-blue-500">
-              <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "User"} />
+              <AvatarImage 
+                src={session?.user?.image || `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(session?.user?.name || "User")}`} 
+                alt={session?.user?.name ?? "User"} 
+              />
               <AvatarFallback className="bg-blue-600 text-white font-bold">
                 {getInitials(session?.user?.name ?? session?.user?.email)}
               </AvatarFallback>

@@ -8,7 +8,6 @@ import { CheckSquare } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
 import { parseNumberInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { RadioHealthStore } from "@/components/input-data/radio-store";
 
 export function DistributionCard() {
   const { control } = useFormContext<ReportFormValues>();
@@ -86,12 +85,7 @@ export function DistributionCard() {
             )}
           />
         </div>
-        <div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
-          <p className="text-sm font-medium text-muted-foreground">
-            Kondisi Store
-          </p>
-          <RadioHealthStore />
-        </div>
+       
       </CardContent>
     </Card>
   );
