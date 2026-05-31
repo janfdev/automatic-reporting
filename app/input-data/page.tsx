@@ -176,8 +176,8 @@ export default function InputDataPage() {
               <SalesCard />
               <ShrinkageCard />
               <StockCard />
-              <OosCard />
               <DistributionCard />
+              <OosCard />
               <SupportCard />
             </form>
 

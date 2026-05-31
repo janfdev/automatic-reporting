@@ -85,7 +85,6 @@ export function DistributionCard() {
             )}
           />
         </div>
-       
       </CardContent>
     </Card>
   );
