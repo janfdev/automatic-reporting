@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioHealthStore } from "@/components/input-data/radio-store";
 
 export default function InputDataPage() {
   const router = useRouter();
@@ -171,6 +172,7 @@ export default function InputDataPage() {
                 1. TAMPILAN KHUSUS MOBILE & TABLET (Urutan Vertikal Semuanya)
                 ========================================================================= */}
             <form className="flex flex-col gap-6 lg:hidden">
+              <RadioHealthStore/>
               <SalesCard />
               <ShrinkageCard />
               <StockCard />
@@ -182,6 +184,7 @@ export default function InputDataPage() {
             {/* =========================================================================
                 2. TAMPILAN KHUSUS DESKTOP (Grid Sejajar & Tinggi Mengikuti Sampingnya)
                 ========================================================================= */}
+            <div className="hidden lg:block mb-6"><RadioHealthStore/></div>
             <form className="hidden lg:grid grid-cols-2 gap-6 items-stretch">
               {/* Baris 1 */}
               <SalesCard />
@@ -225,34 +228,15 @@ export default function InputDataPage() {
           >
             <div className="mx-auto w-full max-w-4xl relative">
               
-              <div className="grid gap-3 rounded-lg border bg-background p-4 md:grid-cols-[1fr_auto] md:items-end">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">
-                    Nomor tujuan WhatsApp opsional
-                  </label>
-                  <Input
-                    value={waTarget}
-                    onChange={(e) => setWaTarget(e.target.value)}
-                    placeholder="62812xxxxxxx"
-                    inputMode="tel"
-                    className="max-w-md"
-                  />
-                  <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
-                    Kosongkan jika hanya ingin preview dan salin teks. wa.me
-                    tidak bisa langsung kirim ke grup, jadi untuk grup gunakan
-                    tombol salin.
-                  </p>
-                </div>
-
                 {/* Wrapper Tombol Aksi Bersandingan (Selalu Berjejer ke Bawah / Vertikal) */}
-                <div className="flex flex-col gap-2 w-full md:w-auto justify-center items-center">
+                <div className="flex flex-col gap-2 w-full justify-center items-center">
                   
                   {/* Tombol Utama: Simpan & Preview */}
                   <Button
                     type="button"
                     onClick={handleSubmit(onPreviewWA)}
                     disabled={isSending}
-                    className="w-full sm:w-48 rounded-md border-0 bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-50 gap-2"
+                    className="w-full rounded-md border-0 bg-emerald-600 px-6 text-white hover:bg-emerald-700 disabled:opacity-50 gap-2"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -267,14 +251,14 @@ export default function InputDataPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsBarVisible(false)}
-                    className="w-full sm:w-48 gap-2 border-slate-200 text-slate-600 hover:bg-slate-50"
+                    className="w-full gap-2 border-slate-200 text-slate-600 hover:bg-slate-50"
                   >
                     <ChevronDown className="w-4 h-4" />
                     <span>Sembunyikan</span>
                   </Button>
 
                 </div>
-              </div>
+              
             </div>
           </div>
 
