@@ -116,7 +116,10 @@ export const dailyReports = pgTable("daily_reports", {
   // Lainnya
   isStoreHealthy: text("is_store_healthy").default("store sehat"),
   needSupport: text("need_support"),
-
+  formKendala: text("form_kendala"),
+  supportStatus: text("support_status").default("open").notNull(),
+  kendalaStatus: text("kendala_status").default("open").notNull(),
+  
   // Status workflow WA
   isPushedToWa: boolean("is_pushed_to_wa").default(false)
 });

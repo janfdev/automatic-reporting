@@ -125,8 +125,11 @@ MTD
 *Shrinkage Management*
 (Losses, waste)
 
-* Waste: Rp {{ WASTE }}
+*Waste: Rp {{ WASTE }}
 * Losses: Rp {{ LOSSES }}
+
+*Kendala:*
+{{ KENDALA }}
 
 *Need Support:*
 {{ NEED_SUPPORT }}
@@ -392,6 +395,7 @@ export async function POST(req: Request) {
     YTD_LABEL: ytdSummary.periodLabel,
     WASTE: (report.waste || 0).toLocaleString("id-ID"),
     LOSSES: (report.losses || 0).toLocaleString("id-ID"),
+    KENDALA: report.formKendala || "-",
     NEED_SUPPORT: report.needSupport || "-"
   };
 

@@ -25,6 +25,7 @@ const reportPayloadSchema = z.object({
   waste: z.coerce.number().min(0).default(0),
   losses: z.coerce.number().min(0).default(0),
   needSupport: z.string().max(2000).optional().default(""),
+  formKendala: z.string().max(2000).optional().default(""),
   isStoreHealthy: z.string().default("store sehat"),
   isPushedToWa: z.boolean().optional().default(false)
 });
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
       waste,
       losses,
       needSupport,
+      formKendala,
       isStoreHealthy,
       isPushedToWa
     } = parsed.data;
@@ -114,6 +116,7 @@ export async function POST(req: NextRequest) {
         waste: Number(waste),
         losses: Number(losses),
         needSupport,
+        formKendala,
         isStoreHealthy,
         isPushedToWa
       })

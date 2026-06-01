@@ -6,7 +6,6 @@ import { useForm, FormProvider, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Loader2, Copy, ExternalLink, MessageSquareText, ChevronDown, ChevronUp } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppHeader } from "@/components/layout/app-header";
@@ -58,7 +57,8 @@ export default function InputDataPage() {
       stockLpg12kg: 0,
       waste: 0,
       losses: 0,
-      needSupport: ""
+      needSupport: "",
+      formKendala: ""
     }
   });
 
@@ -258,7 +258,6 @@ export default function InputDataPage() {
                   </Button>
 
                 </div>
-              
             </div>
           </div>
 

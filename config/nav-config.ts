@@ -43,6 +43,22 @@ export const navGroups: NavGroup[] = [
         items: []
       },
       {
+        title: "Need Support",
+        url: "/admin/dashboard/support",
+        icon: "help",
+        shortcut: ["n", "s"],
+        isActive: false,
+        items: []
+      },
+      {
+        title: "Kendala",
+        url: "/admin/dashboard/kendala",
+        icon: "warning",
+        shortcut: ["k", "d"],
+        isActive: false,
+        items: []
+      },
+      {
         title: "WhatsApp",
         url: "/admin/dashboard/whatsapp",
         icon: "chat",

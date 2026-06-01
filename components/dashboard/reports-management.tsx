@@ -37,7 +37,15 @@ type ReportItem = {
   storeName: string;
 };
 
-export function ReportsManagement() {
+export function ReportsManagement({ 
+  storeId, 
+  startDate, 
+  endDate 
+}: { 
+  storeId?: string; 
+  startDate?: string; 
+  endDate?: string; 
+}) {
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +74,12 @@ export function ReportsManagement() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/dashboard/reports?page=${p}&limit=${limit}`);
+      const params = new URLSearchParams({ page: p.toString(), limit: limit.toString() });
+      if (storeId && storeId !== "all") params.append("storeId", storeId);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+
+      const res = await fetch(`/api/dashboard/reports?${params.toString()}`);
       const json = await res.json();
       if (json.reports) {
         setReports(json.reports);
@@ -82,7 +95,14 @@ export function ReportsManagement() {
   };
 
   useEffect(() => {
+    setPage(1); // reset to page 1 on filter change
+    loadReports(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId, startDate, endDate]);
+
+  useEffect(() => {
     loadReports(page);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const goToPage = (p: number) => {

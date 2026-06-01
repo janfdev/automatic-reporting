@@ -242,6 +242,7 @@ export async function POST(req: Request) {
     YTD_LABEL: ytdSummary.periodLabel,
     WASTE: (report.waste || 0).toLocaleString("id-ID"),
     LOSSES: (report.losses || 0).toLocaleString("id-ID"),
+    KENDALA: report.formKendala || "-",
     NEED_SUPPORT: report.needSupport || "-"
   };
 

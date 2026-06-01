@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { desc, eq, and, count, sql } from "drizzle-orm";
+import { desc, eq, and, count, sql, gte } from "drizzle-orm";
 import { db } from "@/db";
 import { dailyReports, store, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -13,6 +13,8 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const storeId = searchParams.get("storeId");
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10")));
     const offset = (page - 1) * limit;
@@ -20,6 +22,16 @@ export async function GET(req: Request) {
     const conditions = [];
     if (storeId) {
       conditions.push(eq(dailyReports.storeId, storeId));
+    }
+    if (startDateParam) {
+      const d = new Date(startDateParam);
+      d.setHours(0,0,0,0);
+      conditions.push(gte(dailyReports.reportDate, d));
+    }
+    if (endDateParam) {
+      const d = new Date(endDateParam);
+      d.setHours(23,59,59,999);
+      conditions.push(sql`${dailyReports.reportDate} <= ${d}`);
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -44,6 +56,10 @@ export async function GET(req: Request) {
         storeId: dailyReports.storeId,
         authorName: users.name,
         storeName: store.name,
+        needSupport: dailyReports.needSupport,
+        formKendala: dailyReports.formKendala,
+        supportStatus: dailyReports.supportStatus,
+        kendalaStatus: dailyReports.kendalaStatus,
       })
       .from(dailyReports)
       .leftJoin(users, eq(dailyReports.authorId, users.id))

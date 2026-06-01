@@ -64,7 +64,10 @@ export const reportSchema = z.object({
   isStoreHealthy: z
     .enum(["store sehat", "store tidak sehat"])
     .default("store sehat"),
-  needSupport: z.string().optional()
+  formKendala: z.string().optional(),  
+  needSupport: z.string().optional(),
+  supportStatus: z.enum(["open", "in_progress", "resolved"]).default("open"),
+  kendalaStatus: z.enum(["open", "in_progress", "resolved"]).default("open")
 }).superRefine((data, ctx) => {
   if (data.salesGroceries === 0 && data.salesLpg === 0 && data.salesPelumas === 0) {
     ctx.addIssue({

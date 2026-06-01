@@ -60,6 +60,9 @@ MTD
 * Waste: Rp {{ WASTE }}
 * Losses: Rp {{ LOSSES }}
 
+*Kendala:*
+{{ KENDALA }}
+
 *Need Support:*
 {{ NEED_SUPPORT }}
 
