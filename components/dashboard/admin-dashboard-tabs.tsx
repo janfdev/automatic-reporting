@@ -744,37 +744,39 @@ export function AdminDashboardTabs() {
               </div>
 
               {/* --- ROW 3: TABEL NEED SUPPORT & KOMPOSISI PENJUALAN --- */}
-              <div className="grid gap-4 md:grid-cols-12">
-                {/* Tabel Need Support — Real Data */}
-                <Card className="md:col-span-8 bg-card border-none shadow-sm">
-                  <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-sm font-bold text-foreground">
-                        10 Need Support Terbaru
-                      </CardTitle>
-                      <CardDescription className="text-[11px] text-muted-foreground">
-                        (Laporan terbaru dari kasir)
-                      </CardDescription>
-                    </div>
-                    <Link
-                      href="/admin/dashboard/support"
-                      className="text-[11px] text-blue-600 hover:underline font-medium"
-                    >
-                      Lihat Semua →
-                    </Link>
-                  </CardHeader>
-                  <CardContent className="p-2 pt-0">
-                    <div className="rounded-lg border overflow-hidden">
-                      <Table>
+              <div className="grid gap-4 grid-cols-1 lg:grid-cols-12 w-full max-w-full overflow-hidden">
+              {/* Tabel Need Support — Real Data */}
+              <Card className="lg:col-span-8 bg-card border-none shadow-sm w-full overflow-hidden">
+                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm font-bold text-foreground truncate">
+                      10 Need Support Terbaru
+                    </CardTitle>
+                    <CardDescription className="text-[11px] text-muted-foreground truncate">
+                      (Laporan terbaru dari kasir)
+                    </CardDescription>
+                  </div>
+                  <Link
+                    href="/admin/dashboard/support"
+                    className="text-[11px] text-blue-600 hover:underline font-medium shrink-0"
+                  >
+                    Lihat Semua →
+                  </Link>
+                </CardHeader>
+                <CardContent className="p-2 pt-0 w-full">
+                  {/* FIX UTAMA 1: Tambahkan pembungkus overflow-x-auto agar tabel bisa di-scroll di HP */}
+                  <div className="rounded-lg border overflow-hidden w-full">
+                    <div className="w-full overflow-x-auto scrollbar-thin">
+                      <Table className="w-full min-w-[500px]"> {/* Mengunci lebar minimum tabel di dalam scrollbox */}
                         <TableHeader className="bg-muted/50">
                           <TableRow>
-                            <TableHead className="text-xs font-bold text-muted-foreground h-9">
+                            <TableHead className="text-xs font-bold text-muted-foreground h-9 whitespace-nowrap">
                               Cabang
                             </TableHead>
-                            <TableHead className="text-xs font-bold text-muted-foreground h-9">
+                            <TableHead className="text-xs font-bold text-muted-foreground h-9 whitespace-nowrap">
                               Need Support
                             </TableHead>
-                            <TableHead className="text-xs font-bold text-muted-foreground h-9">
+                            <TableHead className="text-xs font-bold text-muted-foreground h-9 whitespace-nowrap">
                               Status
                             </TableHead>
                           </TableRow>
@@ -808,11 +810,11 @@ export function AdminDashboardTabs() {
                                   {row.storeName}
                                 </TableCell>
                                 <TableCell className="py-2.5 text-xs text-muted-foreground max-w-[240px]">
-                                  <p className="line-clamp-2">
+                                  <p className="line-clamp-2 break-words">
                                     {row.needSupport}
                                   </p>
                                 </TableCell>
-                                <TableCell className="py-2.5">
+                                <TableCell className="py-2.5 whitespace-nowrap">
                                   <span
                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                       row.supportStatus === "resolved"
@@ -835,196 +837,176 @@ export function AdminDashboardTabs() {
                         </TableBody>
                       </Table>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* Komposisi Penjualan */}
-                <Card className="md:col-span-4 bg-card border-none shadow-sm flex flex-col justify-between">
-                  <CardHeader className="p-4 pb-0">
-                    <CardTitle className="text-sm font-bold text-foreground">
-                      Komposisi Penjualan (Periode)
-                    </CardTitle>
-                    <CardDescription className="text-[11px] text-muted-foreground">
-                      (Semua Store)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-4 flex flex-col items-center justify-center flex-1">
-                    <div className="relative h-[150px] w-[150px] flex items-center justify-center">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Tooltip
-                            formatter={(value, name, entry) => {
-                              const raw =
-                                (entry.payload as { raw?: number })?.raw ?? 0;
-                              const juta = (raw / 1000000).toFixed(2);
-                              return [`${value}% · Rp ${juta} Juta`, name] as [
-                                string,
-                                string,
-                              ];
-                            }}
-                            contentStyle={{
-                              fontSize: 11,
-                              borderRadius: 8,
-                              padding: "6px 10px",
-                            }}
-                          />
-                          <Pie
-                            data={
-                              analytics
-                                ? [
-                                    {
-                                      name: "Groceries",
-                                      value:
-                                        analytics.summary.compositionRange
-                                          .groceries,
-                                      raw: analytics.summary.compositionRange
-                                        .rawGroceries,
-                                      color: "#1e3a8a",
-                                    },
-                                    {
-                                      name: "LPG",
-                                      value:
-                                        analytics.summary.compositionRange.lpg,
-                                      raw: analytics.summary.compositionRange
-                                        .rawLpg,
-                                      color: "#22c55e",
-                                    },
-                                    {
-                                      name: "Non Fuel",
-                                      value:
-                                        analytics.summary.compositionRange
-                                          .nonFuel,
-                                      raw: analytics.summary.compositionRange
-                                        .rawNonFuel,
-                                      color: "#f59e0b",
-                                    },
-                                    {
-                                      name: "Pelumas",
-                                      value:
-                                        analytics.summary.compositionRange
-                                          .pelumas,
-                                      raw: analytics.summary.compositionRange
-                                        .rawPelumas,
-                                      color: "#a855f7",
-                                    },
-                                  ].filter((c) => c.value > 0)
-                                : []
-                            }
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={50}
-                            outerRadius={70}
-                            paddingAngle={2}
-                          >
-                            {(analytics
+              {/* Komposisi Penjualan */}
+              <Card className="lg:col-span-4 bg-card border-none shadow-sm flex flex-col justify-between w-full overflow-hidden">
+                <CardHeader className="p-4 pb-0">
+                  <CardTitle className="text-sm font-bold text-foreground truncate">
+                    Komposisi Penjualan (Periode)
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-muted-foreground truncate">
+                    (Semua Store)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 flex flex-col items-center justify-center flex-1 w-full min-w-0">
+                  {/* FIX UTAMA 2: Mengunci dimensi chart lingkaran agar responsif penuh */}
+                  <div className="relative h-[150px] w-[150px] flex items-center justify-center shrink-0 mx-auto">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Tooltip
+                          formatter={(value, name, entry) => {
+                            const raw =
+                              (entry.payload as { raw?: number })?.raw ?? 0;
+                            const juta = (raw / 1000000).toFixed(2);
+                            return [`${value}% · Rp ${juta} Juta`, name] as [
+                              string,
+                              string,
+                            ];
+                          }}
+                          contentStyle={{
+                            fontSize: 11,
+                            borderRadius: 8,
+                            padding: "6px 10px",
+                          }}
+                        />
+                        <Pie
+                          data={
+                            analytics
                               ? [
                                   {
                                     name: "Groceries",
-                                    value:
-                                      analytics.summary.compositionRange
-                                        .groceries,
+                                    value: analytics.summary.compositionRange.groceries,
+                                    raw: analytics.summary.compositionRange.rawGroceries,
                                     color: "#1e3a8a",
                                   },
                                   {
                                     name: "LPG",
-                                    value:
-                                      analytics.summary.compositionRange.lpg,
+                                    value: analytics.summary.compositionRange.lpg,
+                                    raw: analytics.summary.compositionRange.rawLpg,
                                     color: "#22c55e",
                                   },
                                   {
                                     name: "Non Fuel",
-                                    value:
-                                      analytics.summary.compositionRange
-                                        .nonFuel,
+                                    value: analytics.summary.compositionRange.nonFuel,
+                                    raw: analytics.summary.compositionRange.rawNonFuel,
                                     color: "#f59e0b",
                                   },
                                   {
                                     name: "Pelumas",
-                                    value:
-                                      analytics.summary.compositionRange
-                                        .pelumas,
+                                    value: analytics.summary.compositionRange.pelumas,
+                                    raw: analytics.summary.compositionRange.rawPelumas,
                                     color: "#a855f7",
                                   },
                                 ].filter((c) => c.value > 0)
                               : []
-                            ).map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                      <div className="absolute text-center pointer-events-none">
-                        <p className="text-[10px] text-muted-foreground">
-                          Total
-                        </p>
-                        <p className="text-xs font-bold text-foreground">
-                          {analytics?.summary.totalSalesRange
-                            ? `${(analytics.summary.totalSalesRange / 1000000).toFixed(1)} Juta`
-                            : "Rp 0"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-full mt-4 space-y-1">
-                      {(analytics
-                        ? [
-                            {
-                              name: "Groceries",
-                              value:
-                                analytics.summary.compositionRange.groceries,
-                              raw: analytics.summary.compositionRange
-                                .rawGroceries,
-                              color: "#1e3a8a",
-                            },
-                            {
-                              name: "LPG",
-                              value: analytics.summary.compositionRange.lpg,
-                              raw: analytics.summary.compositionRange.rawLpg,
-                              color: "#22c55e",
-                            },
-                            {
-                              name: "Non Fuel",
-                              value: analytics.summary.compositionRange.nonFuel,
-                              raw: analytics.summary.compositionRange
-                                .rawNonFuel,
-                              color: "#f59e0b",
-                            },
-                            {
-                              name: "Pelumas",
-                              value: analytics.summary.compositionRange.pelumas,
-                              raw: analytics.summary.compositionRange
-                                .rawPelumas,
-                              color: "#a855f7",
-                            },
-                          ].filter((c) => c.value > 0)
-                        : []
-                      ).map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between items-center text-xs"
+                          }
+                          dataKey="value"
+                          nameKey="name"
+                          innerRadius={50}
+                          outerRadius={70}
+                          paddingAngle={2}
                         >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: item.color }}
-                            />
-                            <span className="text-muted-foreground">
-                              {item.name}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-bold text-foreground">
-                              {item.value}%
-                            </span>
-                            <span className="text-muted-foreground ml-1 text-[10px]">
-                              {(item.raw / 1000000).toFixed(1)} Jt
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                          {(analytics
+                            ? [
+                                {
+                                  name: "Groceries",
+                                  value: analytics.summary.compositionRange.groceries,
+                                  color: "#1e3a8a",
+                                },
+                                {
+                                  name: "LPG",
+                                  value: analytics.summary.compositionRange.lpg,
+                                  color: "#22c55e",
+                                },
+                                {
+                                  name: "Non Fuel",
+                                  value: analytics.summary.compositionRange.nonFuel,
+                                  color: "#f59e0b",
+                                },
+                                {
+                                  name: "Pelumas",
+                                  value: analytics.summary.compositionRange.pelumas,
+                                  color: "#a855f7",
+                                },
+                              ].filter((c) => c.value > 0)
+                            : []
+                          ).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute text-center pointer-events-none w-full px-2">
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Total</p>
+                      <p className="text-xs font-black text-foreground truncate">
+                        {analytics?.summary.totalSalesRange
+                          ? `${(analytics.summary.totalSalesRange / 1000000).toFixed(1)} Jt`
+                          : "Rp 0"}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                  
+                  {/* Legenda List Item */}
+                  <div className="w-full mt-4 space-y-1 min-w-0">
+                    {(analytics
+                      ? [
+                          {
+                            name: "Groceries",
+                            value: analytics.summary.compositionRange.groceries,
+                            raw: analytics.summary.compositionRange.rawGroceries,
+                            color: "#1e3a8a",
+                          },
+                          {
+                            name: "LPG",
+                            value: analytics.summary.compositionRange.lpg,
+                            raw: analytics.summary.compositionRange.rawLpg,
+                            color: "#22c55e",
+                          },
+                          {
+                            name: "Non Fuel",
+                            value: analytics.summary.compositionRange.nonFuel,
+                            raw: analytics.summary.compositionRange.rawNonFuel,
+                            color: "#f59e0b",
+                          },
+                          {
+                            name: "Pelumas",
+                            value: analytics.summary.compositionRange.pelumas,
+                            raw: analytics.summary.compositionRange.rawPelumas,
+                            color: "#a855f7",
+                          },
+                        ].filter((c) => c.value > 0)
+                      : []
+                    ).map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center text-xs min-w-0 gap-2"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-muted-foreground truncate">
+                            {item.name}
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0 font-medium">
+                          <span className="font-bold text-foreground">
+                            {item.value}%
+                          </span>
+                          <span className="text-muted-foreground ml-1 text-[10px]">
+                            {(item.raw / 1000000).toFixed(1)}Jt
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
               {/* --- ROW 4: PERBAIKAN PERSIS GAMBAR image_7bcefb.png (Update Kondisi Store) --- */}
               <Card className="bg-card border-none shadow-sm rounded-xl">
