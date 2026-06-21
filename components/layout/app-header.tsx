@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeModeToggle } from "@/components/themes/theme-mode-toggle";
 import { Loader2, Bell } from "lucide-react";
 import Image from "next/image";
-import Logo from "@/public/Logo_pertamina.png"
+import Logo from "@/public/Logo_pertamina.png";
 
 function getInitials(nameOrEmail: string | undefined): string {
   if (!nameOrEmail) return "U";
@@ -32,16 +32,16 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
     const updateTime = () => {
       const now = new Date();
       const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
       };
-      setTime(now.toLocaleDateString('en-US', options));
+      setTime(now.toLocaleDateString("en-US", options));
     };
 
     updateTime();
@@ -52,58 +52,57 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 w-full border-b bg-background/95 backdrop-blur p-2">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        
         {/* --- Kiri: Logo & Branding --- */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center">
-             {/* Ganti src dengan path logo Pertamina Retail Anda */}
+            {/* Ganti src dengan path logo Pertamina Retail Anda */}
             <div className="relative w-[130px] h-[130px]">
-               <Image
-                  src={Logo}
-                  alt="Logo Pertamina Retail"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+              <Image
+                src={Logo}
+                alt="Logo Pertamina Retail"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
-          <h1 className="text-lg font-bold text-[#1e293b] hidden sm:block">
+          <h1 className="text-lg font-bold text-foreground hidden sm:block">
             Sales Daily Report
           </h1>
         </div>
 
         {/* --- Tengah/Kanan: Real-time Clock --- */}
         <div className="hidden lg:block flex-1 text-right px-8">
-          <p className="text-sm font-semibold text-gray-700">
-            {time}
-          </p>
+          <p className="text-sm font-semibold text-muted-foreground">{time}</p>
         </div>
-        
+
         {/* --- Kanan: Actions & Profile --- */}
         <div className="flex items-center gap-3">
-          
           {/* Theme Toggle */}
           <ThemeModeToggle />
 
           {/* Notification Icon */}
           <div className="relative p-2 rounded-full bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
-            <Bell className="w-5 h-5 text-gray-600" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
           </div>
 
           {/* User Profile */}
           <div className="flex items-center gap-3 pl-2 border-l ml-2">
             <Avatar className="h-9 w-9 border-2 border-blue-500">
-              <AvatarImage 
-                src={session?.user?.image || `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(session?.user?.name || "User")}`} 
-                alt={session?.user?.name ?? "User"} 
+              <AvatarImage
+                src={
+                  session?.user?.image ||
+                  `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(session?.user?.name || "User")}`
+                }
+                alt={session?.user?.name ?? "User"}
               />
               <AvatarFallback className="bg-blue-600 text-white font-bold">
                 {getInitials(session?.user?.name ?? session?.user?.email)}
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:flex flex-col text-left">
-              <span className="text-sm font-bold text-gray-800">
+              <span className="text-sm font-bold text-foreground">
                 {session?.user?.name ?? "Admin User"}
               </span>
             </div>
@@ -115,13 +114,14 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
             size="icon"
             onClick={onLogout}
             disabled={isSigningOut}
-            className="text-gray-500 hover:text-red-600"
+            className="text-muted-foreground hover:text-red-600"
           >
             {isSigningOut ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {!isSigningOut && <span className="text-[10px] font-bold">OUT</span>}
+            {!isSigningOut && (
+              <span className="text-[10px] font-bold">OUT</span>
+            )}
           </Button>
         </div>
-
       </div>
     </header>
   );

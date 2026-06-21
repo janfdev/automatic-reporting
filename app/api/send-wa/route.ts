@@ -3,10 +3,11 @@ import { dailyReports, store, storeReportSummaries, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
+import { fillDailySalesGaps } from "@/lib/wa-message";
 
 const sendWaSchema = z.object({
   reportId: z.string(),
-  groupIds: z.array(z.string()).optional()
+  groupIds: z.array(z.string()).optional(),
 });
 
 function formatCurrency(value: number) {
@@ -25,8 +26,8 @@ async function loadPeriodSummary(params: {
     where: and(
       eq(storeReportSummaries.storeId, params.storeId),
       eq(storeReportSummaries.periodType, params.periodType),
-      eq(storeReportSummaries.periodKey, params.periodKey)
-    )
+      eq(storeReportSummaries.periodKey, params.periodKey),
+    ),
   });
 
   if (summary) return summary;
@@ -37,15 +38,15 @@ async function loadPeriodSummary(params: {
       totalSales: sql<number>`coalesce(sum(${dailyReports.totalSales}), 0)`,
       salesGroceries: sql<number>`coalesce(sum(${dailyReports.salesGroceries}), 0)`,
       salesLpg: sql<number>`coalesce(sum(${dailyReports.salesLpg}), 0)`,
-      salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`
+      salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`,
     })
     .from(dailyReports)
     .where(
       and(
         eq(dailyReports.storeId, params.storeId),
         gte(dailyReports.reportDate, params.periodStart),
-        lt(dailyReports.reportDate, params.periodEnd)
-      )
+        lt(dailyReports.reportDate, params.periodEnd),
+      ),
     );
 
   return {
@@ -63,14 +64,14 @@ async function loadPeriodSummary(params: {
     salesPelumas: Number(totals?.salesPelumas ?? 0),
     targetSpdSnapshot: 0,
     lastReportDate: params.periodEnd,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 }
 
 function getMonthLabel(date: Date) {
   return date.toLocaleDateString("id-ID", {
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 }
 
@@ -124,7 +125,6 @@ MTD
 
 *Shrinkage Management*
 (Losses, waste)
-
 *Waste: Rp {{ WASTE }}
 * Losses: Rp {{ LOSSES }}
 
@@ -139,7 +139,7 @@ Have a *Bright* Day🌤️`;
 
 function renderTemplate(
   template: string,
-  mapping: Record<string, string | number>
+  mapping: Record<string, string | number>,
 ) {
   return template.replace(/{{\s*(\w+)\s*}}/g, (match, key) => {
     const val = mapping[key.toUpperCase()];
@@ -161,21 +161,21 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return Response.json(
       { success: false, error: "Payload tidak valid" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const { reportId, groupIds } = parsed.data;
   const userRec = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id)
+    where: eq(users.id, session.user.id),
   });
   if (!userRec?.storeId) {
     return Response.json(
       {
         success: false,
-        error: "Akun ini belum memiliki outlet (store) yang ditetapkan."
+        error: "Akun ini belum memiliki outlet (store) yang ditetapkan.",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -196,9 +196,9 @@ export async function POST(req: Request) {
     return Response.json(
       {
         success: false,
-        error: "Forbidden"
+        error: "Forbidden",
       },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -215,13 +215,13 @@ export async function POST(req: Request) {
   const startOfMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth(),
-    1
+    1,
   );
   startOfMonth.setHours(0, 0, 0, 0);
   const startOfNextMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth() + 1,
-    1
+    1,
   );
   startOfNextMonth.setHours(0, 0, 0, 0);
   const startOfYear = new Date(reportDate.getFullYear(), 0, 1);
@@ -238,7 +238,7 @@ export async function POST(req: Request) {
     periodKey: monthKey,
     periodLabel: `MTD ${getMonthLabel(reportDate)}`,
     periodStart: startOfMonth,
-    periodEnd: startOfNextMonth
+    periodEnd: startOfNextMonth,
   });
 
   const ytdSummary = await loadPeriodSummary({
@@ -247,32 +247,32 @@ export async function POST(req: Request) {
     periodKey: yearKey,
     periodLabel: `YTD ${reportDate.getFullYear()}`,
     periodStart: startOfYear,
-    periodEnd: startOfNextYear
+    periodEnd: startOfNextYear,
   });
 
   // Ambil rincian sales harian untuk bulan berjalan
   const monthlyReports = await db
     .select({
       reportDate: dailyReports.reportDate,
-      totalSales: dailyReports.totalSales
+      totalSales: dailyReports.totalSales,
     })
     .from(dailyReports)
     .where(
       and(
         eq(dailyReports.storeId, report.storeId),
         gte(dailyReports.reportDate, startOfMonth),
-        lt(dailyReports.reportDate, startOfNextMonth)
-      )
+        lt(dailyReports.reportDate, startOfNextMonth),
+      ),
     )
     .orderBy(dailyReports.reportDate);
 
-  const salesDetailsList = monthlyReports
-    .map((r) => {
-      const d = new Date(r.reportDate);
-      const fmtDate = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-      return `${fmtDate} : ${formatCurrency(r.totalSales || 0)}`;
-    })
-    .join("\n");
+  // Tampilkan seluruh hari dalam bulan (hari kosong = Rp 0)
+  const endOfMonth = new Date(startOfNextMonth.getTime() - 1);
+  const salesDetailsList = fillDailySalesGaps(
+    monthlyReports,
+    startOfMonth,
+    endOfMonth,
+  );
 
   // Ambil riwayat Monthly SPD (6 bulan terakhir)
   const monthlySummaries = await db
@@ -281,8 +281,8 @@ export async function POST(req: Request) {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "mtd")
-      )
+        eq(storeReportSummaries.periodType, "mtd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(6);
@@ -302,8 +302,8 @@ export async function POST(req: Request) {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "ytd")
-      )
+        eq(storeReportSummaries.periodType, "ytd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(3);
@@ -324,7 +324,7 @@ export async function POST(req: Request) {
   const dateString = reportDate.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 
   // Parsing JSON items
@@ -349,7 +349,11 @@ export async function POST(req: Request) {
   const rawTargets: string[] = [];
   const singleVar = process.env.WA_TUJUAN_LAPORAN;
   if (singleVar) {
-    singleVar.split(",").map((t) => t.trim()).filter(Boolean).forEach((t) => rawTargets.push(t));
+    singleVar
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .forEach((t) => rawTargets.push(t));
   }
   for (const key in process.env) {
     if (key.startsWith("WA_TUJUAN_LAPORAN_")) {
@@ -374,7 +378,7 @@ export async function POST(req: Request) {
     OP_HOURS: storeData?.operationalHours || "-",
     PRICE_CLUSTER: storeData?.priceCluster || "-",
     HEALTH_STATUS: healthStatus,
-    SALES_DETAILS_LIST: salesDetailsList || "Belum ada data sales bulan ini",
+    SALES_DETAILS_LIST: salesDetailsList,
     DETAIL_GROCERIES: formatCurrency(report.salesGroceries || 0),
     DETAIL_LPG: formatCurrency(report.salesLpg || 0),
     DETAIL_PELUMAS: formatCurrency(report.salesPelumas || 0),
@@ -396,7 +400,7 @@ export async function POST(req: Request) {
     WASTE: (report.waste || 0).toLocaleString("id-ID"),
     LOSSES: (report.losses || 0).toLocaleString("id-ID"),
     KENDALA: report.formKendala || "-",
-    NEED_SUPPORT: report.needSupport || "-"
+    NEED_SUPPORT: report.needSupport || "-",
   };
 
   const message = renderTemplate(WA_TEMPLATE, mapping);
@@ -409,13 +413,18 @@ export async function POST(req: Request) {
         {
           success: false,
           error: `Konfigurasi gateway belum lengkap: ${missing}`,
-          invalidTargets: invalidTargets
+          invalidTargets: invalidTargets,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    const deliveryResults: { target: string; success: boolean; error?: string; gatewayResponse?: unknown }[] = [];
+    const deliveryResults: {
+      target: string;
+      success: boolean;
+      error?: string;
+      gatewayResponse?: unknown;
+    }[] = [];
     for (const target of validTargets) {
       const waBody = new URLSearchParams();
       waBody.append("target", target);
@@ -425,9 +434,9 @@ export async function POST(req: Request) {
         method: "POST",
         headers: {
           Authorization: token,
-          "Content-Type": "application/x-www-form-urlencoded"
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: waBody.toString()
+        body: waBody.toString(),
       });
 
       const rawResponse = await res.text();
@@ -458,22 +467,22 @@ export async function POST(req: Request) {
           target,
           success: false,
           error: String(reason),
-          gatewayResponse: fonnteResponse
+          gatewayResponse: fonnteResponse,
         });
       } else {
         deliveryResults.push({
           target,
           success: true,
-          gatewayResponse: fonnteResponse
+          gatewayResponse: fonnteResponse,
         });
       }
     }
 
     const failedDeliveries = deliveryResults.filter(
-      (result) => !result.success
+      (result) => !result.success,
     );
     const successDeliveries = deliveryResults.filter(
-      (result) => result.success
+      (result) => result.success,
     );
 
     if (successDeliveries.length === 0) {
@@ -483,11 +492,11 @@ export async function POST(req: Request) {
           error: "Semua nomor gagal menerima pesan WhatsApp.",
           failedTargets: failedDeliveries.map((result) => ({
             target: result.target,
-            error: result.error
+            error: result.error,
           })),
-          results: deliveryResults
+          results: deliveryResults,
         },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
@@ -501,16 +510,16 @@ export async function POST(req: Request) {
         failedDeliveries.length > 0
           ? failedDeliveries.map((result) => ({
               target: result.target,
-              error: result.error
+              error: result.error,
             }))
           : [],
-      results: deliveryResults
+      results: deliveryResults,
     });
   } catch (error) {
     console.error("Error sending WhatsApp report:", error);
     return Response.json(
       { success: false, error: "Gateway Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

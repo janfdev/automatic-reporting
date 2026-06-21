@@ -16,7 +16,7 @@ import {
   Fuel,
   ClipboardList,
   BarChart3,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
@@ -25,7 +25,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,7 +33,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Pagination,
@@ -123,7 +123,7 @@ type ReportDetail = {
 const currency = new Intl.NumberFormat("id-ID", {
   style: "currency",
   currency: "IDR",
-  maximumFractionDigits: 0
+  maximumFractionDigits: 0,
 });
 
 function formatDate(dateStr: string) {
@@ -131,7 +131,7 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
-    year: "numeric"
+    year: "numeric",
   });
 }
 
@@ -141,11 +141,16 @@ export function ReportManagement() {
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<StoreType[]>([]);
   const [reports, setReports] = useState<ReportSummary[]>([]);
-  const [selectedReport, setSelectedReport] = useState<ReportDetail | null>(null);
+  const [selectedReport, setSelectedReport] = useState<ReportDetail | null>(
+    null,
+  );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(stores.length / ITEMS_PER_PAGE)), [stores.length]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(stores.length / ITEMS_PER_PAGE)),
+    [stores.length],
+  );
   const paginatedStores = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return stores.slice(start, start + ITEMS_PER_PAGE);
@@ -154,15 +159,18 @@ export function ReportManagement() {
   useEffect(() => {
     Promise.all([
       apiClient<{ stores: StoreType[] }>("/dashboard/stores"),
-      apiClient<{ reports: ReportSummary[] }>("/dashboard/reports")
-    ]).then(([storesData, reportsData]) => {
-      setStores(storesData.stores);
-      setReports(reportsData.reports);
-    }).catch(() => {
-      toast.error("Gagal memuat data.");
-    }).finally(() => {
-      setLoading(false);
-    });
+      apiClient<{ reports: ReportSummary[] }>("/dashboard/reports"),
+    ])
+      .then(([storesData, reportsData]) => {
+        setStores(storesData.stores);
+        setReports(reportsData.reports);
+      })
+      .catch(() => {
+        toast.error("Gagal memuat data.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -184,7 +192,7 @@ export function ReportManagement() {
     setDetailLoading(true);
     try {
       const data = await apiClient<ReportDetail>(
-        `/dashboard/reports/detail?id=${reportId}`
+        `/dashboard/reports/detail?id=${reportId}`,
       );
       setSelectedReport(data);
       setIsDetailOpen(true);
@@ -223,7 +231,9 @@ export function ReportManagement() {
                   <div className="flex items-center gap-2">
                     <Store className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <CardTitle className="text-base">{storeItem.name}</CardTitle>
+                      <CardTitle className="text-base">
+                        {storeItem.name}
+                      </CardTitle>
                       <CardDescription className="flex items-center gap-1 text-xs">
                         <MapPin className="h-3 w-3" />
                         {storeItem.location}
@@ -241,17 +251,26 @@ export function ReportManagement() {
                         {formatDate(latest.reportDate)}
                       </span>
                       <Badge
-                        variant={latest.isStoreHealthy === "store tidak sehat" ? "destructive" : "default"}
+                        variant={
+                          latest.isStoreHealthy === "store tidak sehat"
+                            ? "destructive"
+                            : "default"
+                        }
                         className={`text-xs ${
                           latest.isStoreHealthy !== "store tidak sehat"
-                            ? "bg-green-100 text-green-700 hover:bg-green-100"
+                            ? "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/15"
                             : ""
                         }`}
                       >
                         {latest.isStoreHealthy !== "store tidak sehat" ? (
-                          <><CheckCircle2 className="h-3 w-3 mr-1" /> Sehat</>
+                          <>
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> Sehat
+                          </>
                         ) : (
-                          <><AlertTriangle className="h-3 w-3 mr-1" /> Tidak Sehat</>
+                          <>
+                            <AlertTriangle className="h-3 w-3 mr-1" /> Tidak
+                            Sehat
+                          </>
                         )}
                       </Badge>
                     </div>
@@ -278,20 +297,24 @@ export function ReportManagement() {
                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>Pencapaian</span>
                           <span>
-                            {((latest.totalSales / storeItem.targetSpd) * 100).toFixed(0)}%
+                            {(
+                              (latest.totalSales / storeItem.targetSpd) *
+                              100
+                            ).toFixed(0)}
+                            %
                           </span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
                           <div
                             className={`h-2 rounded-full transition-all ${
-                              (latest.totalSales / storeItem.targetSpd) >= 100
+                              latest.totalSales / storeItem.targetSpd >= 100
                                 ? "bg-green-500"
-                                : (latest.totalSales / storeItem.targetSpd) >= 75
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
+                                : latest.totalSales / storeItem.targetSpd >= 75
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                             }`}
                             style={{
-                              width: `${Math.min((latest.totalSales / storeItem.targetSpd) * 100, 100)}%`
+                              width: `${Math.min((latest.totalSales / storeItem.targetSpd) * 100, 100)}%`,
                             }}
                           />
                         </div>
@@ -331,7 +354,7 @@ export function ReportManagement() {
               <PaginationItem>
                 <PaginationPrevious
                   disabled={currentPage <= 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 />
               </PaginationItem>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -347,7 +370,9 @@ export function ReportManagement() {
               <PaginationItem>
                 <PaginationNext
                   disabled={currentPage >= totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -377,38 +402,67 @@ export function ReportManagement() {
                 <div className="bg-muted/30 rounded-lg p-4 space-y-1">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     <span className="text-muted-foreground">Store</span>
-                    <span className="font-medium">{selectedReport.store?.name || "-"}</span>
+                    <span className="font-medium">
+                      {selectedReport.store?.name || "-"}
+                    </span>
                     <span className="text-muted-foreground">Lokasi</span>
-                    <span className="font-medium">{selectedReport.store?.location || "-"}</span>
+                    <span className="font-medium">
+                      {selectedReport.store?.location || "-"}
+                    </span>
                     <span className="text-muted-foreground">SE Name</span>
-                    <span className="font-medium">{selectedReport.store?.seName || "-"}</span>
-                    <span className="text-muted-foreground">Tahun Operasional</span>
-                    <span className="font-medium">{selectedReport.store?.operationalYear || "-"}</span>
-                    <span className="text-muted-foreground">Jam Operasional</span>
-                    <span className="font-medium">{selectedReport.store?.operationalHours || "-"}</span>
+                    <span className="font-medium">
+                      {selectedReport.store?.seName || "-"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Tahun Operasional
+                    </span>
+                    <span className="font-medium">
+                      {selectedReport.store?.operationalYear || "-"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Jam Operasional
+                    </span>
+                    <span className="font-medium">
+                      {selectedReport.store?.operationalHours || "-"}
+                    </span>
                     <span className="text-muted-foreground">Cluster Harga</span>
-                    <span className="font-medium">{selectedReport.store?.priceCluster || "-"}</span>
+                    <span className="font-medium">
+                      {selectedReport.store?.priceCluster || "-"}
+                    </span>
                     <span className="text-muted-foreground">Jumlah SA</span>
-                    <span className="font-medium">{selectedReport.store?.saCount || "-"} orang</span>
+                    <span className="font-medium">
+                      {selectedReport.store?.saCount || "-"} orang
+                    </span>
                     <span className="text-muted-foreground">Kondisi Store</span>
                     <span className="font-medium">
                       <Badge
-                        variant={selectedReport.computed.healthStatus !== "Sehat" ? "destructive" : "default"}
+                        variant={
+                          selectedReport.computed.healthStatus !== "Sehat"
+                            ? "destructive"
+                            : "default"
+                        }
                         className={
                           selectedReport.computed.healthStatus === "Sehat"
-                            ? "bg-green-100 text-green-700 hover:bg-green-100"
+                            ? "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/15"
                             : ""
                         }
                       >
                         {selectedReport.computed.healthStatus === "Sehat" ? (
-                          <><CheckCircle2 className="h-3 w-3 mr-1" /> Sehat</>
+                          <>
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> Sehat
+                          </>
                         ) : (
-                          <><AlertTriangle className="h-3 w-3 mr-1" /> Tidak Sehat</>
+                          <>
+                            <AlertTriangle className="h-3 w-3 mr-1" /> Tidak
+                            Sehat
+                          </>
                         )}
                       </Badge>
                     </span>
                     <span className="text-muted-foreground">Author</span>
-                    <span className="font-medium">{selectedReport.author?.name || "-"}</span>
+                    <span className="font-medium">
+                      {selectedReport.author?.name || "-"}
+                    </span>
                   </div>
                 </div>
 
@@ -422,37 +476,54 @@ export function ReportManagement() {
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Package className="h-3.5 w-3.5" /> Groceries
                       </span>
-                      <span className="font-medium">{currency.format(selectedReport.report.salesGroceries || 0)}</span>
+                      <span className="font-medium">
+                        {currency.format(
+                          selectedReport.report.salesGroceries || 0,
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground flex items-center gap-1">
                         <FlaskConical className="h-3.5 w-3.5" /> Sales LPG
                       </span>
-                      <span className="font-medium">{currency.format(selectedReport.report.salesLpg || 0)}</span>
+                      <span className="font-medium">
+                        {currency.format(selectedReport.report.salesLpg || 0)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Fuel className="h-3.5 w-3.5" /> Pelumas
                       </span>
-                      <span className="font-medium">{currency.format(selectedReport.report.salesPelumas || 0)}</span>
+                      <span className="font-medium">
+                        {currency.format(
+                          selectedReport.report.salesPelumas || 0,
+                        )}
+                      </span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-semibold">
                       <span>Total Sales (SPD)</span>
-                      <span>{currency.format(selectedReport.computed.totalSales)}</span>
+                      <span>
+                        {currency.format(selectedReport.computed.totalSales)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Target SPD</span>
-                      <span>{currency.format(selectedReport.computed.targetSpd)}</span>
+                      <span>
+                        {currency.format(selectedReport.computed.targetSpd)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Pencapaian</span>
-                      <span className={`font-semibold ${
-                        parseFloat(selectedReport.computed.pencapaian) >= 100
-                          ? "text-green-600"
-                          : parseFloat(selectedReport.computed.pencapaian) >= 75
-                          ? "text-yellow-600"
-                          : "text-red-600"
-                      }`}>
+                      <span
+                        className={`font-semibold ${
+                          parseFloat(selectedReport.computed.pencapaian) >= 100
+                            ? "text-green-600"
+                            : parseFloat(selectedReport.computed.pencapaian) >=
+                                75
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                        }`}
+                      >
                         {selectedReport.computed.pencapaian}
                       </span>
                     </div>
@@ -460,14 +531,17 @@ export function ReportManagement() {
                       <div className="w-full bg-muted rounded-full h-2.5 mt-1">
                         <div
                           className={`h-2.5 rounded-full ${
-                            parseFloat(selectedReport.computed.pencapaian) >= 100
+                            parseFloat(selectedReport.computed.pencapaian) >=
+                            100
                               ? "bg-green-500"
-                              : parseFloat(selectedReport.computed.pencapaian) >= 75
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
+                              : parseFloat(
+                                    selectedReport.computed.pencapaian,
+                                  ) >= 75
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
                           }`}
                           style={{
-                            width: `${Math.min(parseFloat(selectedReport.computed.pencapaian), 100)}%`
+                            width: `${Math.min(parseFloat(selectedReport.computed.pencapaian), 100)}%`,
                           }}
                         />
                       </div>
@@ -482,12 +556,20 @@ export function ReportManagement() {
                   </h4>
                   <div className="bg-muted/30 rounded-lg p-4 space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fulfillment PB</span>
-                      <span className="font-medium">{selectedReport.report.fulfillmentPb || 0}%</span>
+                      <span className="text-muted-foreground">
+                        Fulfillment PB
+                      </span>
+                      <span className="font-medium">
+                        {selectedReport.report.fulfillmentPb || 0}%
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Avg Fulfillment DC</span>
-                      <span className="font-medium">{selectedReport.report.avgFulfillmentDc || 0}%</span>
+                      <span className="text-muted-foreground">
+                        Avg Fulfillment DC
+                      </span>
+                      <span className="font-medium">
+                        {selectedReport.report.avgFulfillmentDc || 0}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -498,7 +580,9 @@ export function ReportManagement() {
                     Item OOS
                   </h4>
                   <div className="bg-muted/30 rounded-lg p-4">
-                    <p className="text-sm">{selectedReport.computed.oosString}</p>
+                    <p className="text-sm">
+                      {selectedReport.computed.oosString}
+                    </p>
                   </div>
                 </div>
 
@@ -510,15 +594,21 @@ export function ReportManagement() {
                   <div className="bg-muted/30 rounded-lg p-4 space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">LPG 3kg</span>
-                      <span className="font-medium">{selectedReport.report.stockLpg3kg || 0} tabung</span>
+                      <span className="font-medium">
+                        {selectedReport.report.stockLpg3kg || 0} tabung
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">LPG 5.5kg</span>
-                      <span className="font-medium">{selectedReport.report.stockLpg5kg || 0} tabung</span>
+                      <span className="font-medium">
+                        {selectedReport.report.stockLpg5kg || 0} tabung
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">LPG 12kg</span>
-                      <span className="font-medium">{selectedReport.report.stockLpg12kg || 0} tabung</span>
+                      <span className="font-medium">
+                        {selectedReport.report.stockLpg12kg || 0} tabung
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -529,34 +619,64 @@ export function ReportManagement() {
                     MTD / YTD
                   </h4>
                   <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-                    <p className="font-medium text-xs text-muted-foreground">{selectedReport.computed.mtd.label}</p>
+                    <p className="font-medium text-xs text-muted-foreground">
+                      {selectedReport.computed.mtd.label}
+                    </p>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Sales MTD</span>
-                      <span className="font-medium">{currency.format(selectedReport.computed.mtd.totalSales)}</span>
+                      <span className="text-muted-foreground">
+                        Total Sales MTD
+                      </span>
+                      <span className="font-medium">
+                        {currency.format(
+                          selectedReport.computed.mtd.totalSales,
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sales Per Day MTD</span>
-                      <span className="font-medium">{currency.format(selectedReport.computed.mtd.spd)}</span>
+                      <span className="text-muted-foreground">
+                        Sales Per Day MTD
+                      </span>
+                      <span className="font-medium">
+                        {currency.format(selectedReport.computed.mtd.spd)}
+                      </span>
                     </div>
                     {selectedReport.computed.monthlySpdList.length > 0 && (
                       <>
-                        <p className="font-medium text-xs text-muted-foreground pt-2">Monthly SPD</p>
-                        {selectedReport.computed.monthlySpdList.map((item, i) => (
-                          <p key={i} className="text-xs">{item}</p>
-                        ))}
+                        <p className="font-medium text-xs text-muted-foreground pt-2">
+                          Monthly SPD
+                        </p>
+                        {selectedReport.computed.monthlySpdList.map(
+                          (item, i) => (
+                            <p key={i} className="text-xs">
+                              {item}
+                            </p>
+                          ),
+                        )}
                       </>
                     )}
                     {selectedReport.computed.yearlySpdList.length > 0 && (
                       <>
-                        <p className="font-medium text-xs text-muted-foreground pt-2">Yearly SPD</p>
-                        {selectedReport.computed.yearlySpdList.map((item, i) => (
-                          <p key={i} className="text-xs">{item}</p>
-                        ))}
+                        <p className="font-medium text-xs text-muted-foreground pt-2">
+                          Yearly SPD
+                        </p>
+                        {selectedReport.computed.yearlySpdList.map(
+                          (item, i) => (
+                            <p key={i} className="text-xs">
+                              {item}
+                            </p>
+                          ),
+                        )}
                       </>
                     )}
                     <div className="flex justify-between pt-1">
-                      <span className="text-muted-foreground">{selectedReport.computed.ytd.periodLabel}</span>
-                      <span className="font-medium">{currency.format(selectedReport.computed.ytd.totalSales)}</span>
+                      <span className="text-muted-foreground">
+                        {selectedReport.computed.ytd.periodLabel}
+                      </span>
+                      <span className="font-medium">
+                        {currency.format(
+                          selectedReport.computed.ytd.totalSales,
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -569,30 +689,45 @@ export function ReportManagement() {
                   <div className="bg-muted/30 rounded-lg p-4 space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Waste</span>
-                      <span className="font-medium">Rp {(selectedReport.report.waste || 0).toLocaleString("id-ID")}</span>
+                      <span className="font-medium">
+                        Rp{" "}
+                        {(selectedReport.report.waste || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Losses</span>
-                      <span className="font-medium">Rp {(selectedReport.report.losses || 0).toLocaleString("id-ID")}</span>
+                      <span className="font-medium">
+                        Rp{" "}
+                        {(selectedReport.report.losses || 0).toLocaleString(
+                          "id-ID",
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {selectedReport.report.needSupport && selectedReport.report.needSupport !== "-" && (
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-1.5">
-                      <AlertCircle className="h-4 w-4" />
-                      Need Support
-                    </h4>
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <p className="text-sm">{selectedReport.report.needSupport}</p>
+                {selectedReport.report.needSupport &&
+                  selectedReport.report.needSupport !== "-" && (
+                    <div>
+                      <h4 className="font-semibold mb-2 flex items-center gap-1.5">
+                        <AlertCircle className="h-4 w-4" />
+                        Need Support
+                      </h4>
+                      <div className="bg-muted/30 rounded-lg p-4">
+                        <p className="text-sm">
+                          {selectedReport.report.needSupport}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
                   <span>
-                    {selectedReport.report.isPushedToWa ? "✓ Terkirim ke WA" : "✗ Belum dikirim ke WA"}
+                    {selectedReport.report.isPushedToWa
+                      ? "✓ Terkirim ke WA"
+                      : "✗ Belum dikirim ke WA"}
                   </span>
                 </div>
               </div>

@@ -17,7 +17,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -25,7 +25,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,14 +36,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 
 type User = {
@@ -87,14 +87,16 @@ export function UserManagement() {
     email: "",
     password: "",
     role: "kasir",
-    storeId: ""
+    storeId: "",
   });
 
   const loadUsers = async (p = page) => {
     setLoading(true);
     setError(null);
     try {
-      const usersResult = await apiClient<UsersResponse>(`/dashboard/users?page=${p}&limit=${limit}`);
+      const usersResult = await apiClient<UsersResponse>(
+        `/dashboard/users?page=${p}&limit=${limit}`,
+      );
       setUsers(usersResult);
       setTotalPages(usersResult.pagination?.totalPages || 1);
     } catch {
@@ -106,7 +108,9 @@ export function UserManagement() {
 
   const loadStores = async () => {
     try {
-      const storesResult = await apiClient<{ stores: { id: string; name: string }[] }>("/dashboard/stores");
+      const storesResult = await apiClient<{
+        stores: { id: string; name: string }[];
+      }>("/dashboard/stores");
       setStores(storesResult.stores);
     } catch (error) {
       console.error("Failed to fetch stores", error);
@@ -120,7 +124,13 @@ export function UserManagement() {
 
   const handleOpenAdd = () => {
     setEditingUserId(null);
-    setFormData({ name: "", email: "", password: "", role: "kasir", storeId: "" });
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "kasir",
+      storeId: "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -131,7 +141,7 @@ export function UserManagement() {
       email: user.email,
       password: "",
       role: user.role,
-      storeId: user.storeId || ""
+      storeId: user.storeId || "",
     });
     setIsDialogOpen(true);
   };
@@ -141,7 +151,7 @@ export function UserManagement() {
 
     try {
       const res = await fetch(`/api/dashboard/users?id=${id}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
       const data = await res.json();
       if (data.success) {
@@ -169,7 +179,7 @@ export function UserManagement() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -178,7 +188,7 @@ export function UserManagement() {
         toast.success(
           editingUserId
             ? "Pengguna berhasil diperbarui."
-            : "Pengguna berhasil ditambahkan."
+            : "Pengguna berhasil ditambahkan.",
         );
         setIsDialogOpen(false);
         loadUsers(page);
@@ -241,8 +251,8 @@ export function UserManagement() {
                   <span
                     className={
                       user.status === "Active"
-                        ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 whitespace-nowrap"
-                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700 whitespace-nowrap"
+                        ? "rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                        : "rounded-full bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 whitespace-nowrap"
                     }
                   >
                     {user.status}
@@ -308,8 +318,8 @@ export function UserManagement() {
                       <span
                         className={
                           user.status === "Active"
-                            ? "rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 whitespace-nowrap"
-                            : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700 whitespace-nowrap"
+                            ? "rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap"
+                            : "rounded-full bg-red-500/10 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 whitespace-nowrap"
                         }
                       >
                         {user.status}
@@ -354,7 +364,7 @@ export function UserManagement() {
                   <PaginationItem>
                     <PaginationPrevious
                       disabled={page <= 1}
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
                     />
                   </PaginationItem>
                   <PaginationItem className="hidden sm:list-item">
@@ -371,7 +381,9 @@ export function UserManagement() {
                     </PaginationItem>
                   )}
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => Math.abs(p - page) <= 1 && p > 1 && p < totalPages)
+                    .filter(
+                      (p) => Math.abs(p - page) <= 1 && p > 1 && p < totalPages,
+                    )
                     .map((p) => (
                       <PaginationItem key={p} className="hidden sm:list-item">
                         <PaginationLink
@@ -405,7 +417,9 @@ export function UserManagement() {
                   <PaginationItem>
                     <PaginationNext
                       disabled={page >= totalPages}
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                     />
                   </PaginationItem>
                 </PaginationContent>
