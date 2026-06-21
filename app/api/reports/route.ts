@@ -15,8 +15,8 @@ const reportPayloadSchema = z.object({
   itemOos: z
     .array(
       z.object({
-        name: z.string().trim().max(120)
-      })
+        name: z.string().trim().max(120),
+      }),
     )
     .default([]),
   stockLpg3kg: z.coerce.number().min(0).default(0),
@@ -27,7 +27,7 @@ const reportPayloadSchema = z.object({
   needSupport: z.string().max(2000).optional().default(""),
   formKendala: z.string().max(2000).optional().default(""),
   isStoreHealthy: z.string().default("store sehat"),
-  isPushedToWa: z.boolean().optional().default(false)
+  isPushedToWa: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -42,28 +42,28 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       console.log(
         "VALIDATION ERROR:",
-        JSON.stringify(parsed.error.flatten(), null, 2)
+        JSON.stringify(parsed.error.flatten(), null, 2),
       );
 
       return NextResponse.json(
         {
           error: "Payload laporan tidak valid.",
-          details: parsed.error.flatten()
+          details: parsed.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Fetch user from db to get their storeId
     const authorId = session.user.id;
     const userRec = await db.query.users.findFirst({
-      where: eq(users.id, authorId)
+      where: eq(users.id, authorId),
     });
 
     if (!userRec || !userRec.storeId) {
       return NextResponse.json(
         { error: "Akun ini belum memiliki outlet (store) yang ditetapkan." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,12 +84,20 @@ export async function POST(req: NextRequest) {
       needSupport,
       formKendala,
       isStoreHealthy,
-      isPushedToWa
+      isPushedToWa,
     } = parsed.data;
 
     const sanitizedItemOos = itemOos.filter(
-      (item) => item.name.trim().length > 0
+      (item) => item.name.trim().length > 0,
     );
+
+    // Nilai default jika kosong
+    const finalFormKendala =
+      !formKendala || formKendala.trim() === ""
+        ? "Tidak ada"
+        : formKendala.trim();
+    const finalNeedSupport =
+      !needSupport || needSupport.trim() === "" ? "Aman" : needSupport.trim();
 
     // Hitung total otomatis dari server
     const totalSales =
@@ -115,15 +123,15 @@ export async function POST(req: NextRequest) {
         stockLpg12kg: Number(stockLpg12kg),
         waste: Number(waste),
         losses: Number(losses),
-        needSupport,
-        formKendala,
+        needSupport: finalNeedSupport,
+        formKendala: finalFormKendala,
         isStoreHealthy,
-        isPushedToWa
+        isPushedToWa,
       })
       .returning();
 
     const currentStore = await db.query.store.findFirst({
-      where: eq(store.id, storeId)
+      where: eq(store.id, storeId),
     });
 
     const refreshSummary = async (
@@ -131,7 +139,7 @@ export async function POST(req: NextRequest) {
       periodKey: string,
       periodLabel: string,
       periodStart: Date,
-      periodEnd: Date
+      periodEnd: Date,
     ) => {
       const [totals] = await db
         .select({
@@ -139,15 +147,15 @@ export async function POST(req: NextRequest) {
           totalSales: sql<number>`coalesce(sum(${dailyReports.totalSales}), 0)`,
           salesGroceries: sql<number>`coalesce(sum(${dailyReports.salesGroceries}), 0)`,
           salesLpg: sql<number>`coalesce(sum(${dailyReports.salesLpg}), 0)`,
-          salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`
+          salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`,
         })
         .from(dailyReports)
         .where(
           and(
             eq(dailyReports.storeId, storeId),
             gte(dailyReports.reportDate, periodStart),
-            lt(dailyReports.reportDate, periodEnd)
-          )
+            lt(dailyReports.reportDate, periodEnd),
+          ),
         );
 
       await db
@@ -167,13 +175,13 @@ export async function POST(req: NextRequest) {
           salesPelumas: Number(totals?.salesPelumas ?? 0),
           targetSpdSnapshot: currentStore?.targetSpd ?? 0,
           lastReportDate: reportDate,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .onConflictDoUpdate({
           target: [
             storeReportSummaries.storeId,
             storeReportSummaries.periodType,
-            storeReportSummaries.periodKey
+            storeReportSummaries.periodKey,
           ],
           set: {
             periodLabel,
@@ -186,8 +194,8 @@ export async function POST(req: NextRequest) {
             salesPelumas: Number(totals?.salesPelumas ?? 0),
             targetSpdSnapshot: currentStore?.targetSpd ?? 0,
             lastReportDate: reportDate,
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
     };
 
@@ -196,13 +204,13 @@ export async function POST(req: NextRequest) {
     const startOfMonth = new Date(
       reportDate.getFullYear(),
       reportDate.getMonth(),
-      1
+      1,
     );
     startOfMonth.setHours(0, 0, 0, 0);
     const startOfNextMonth = new Date(
       reportDate.getFullYear(),
       reportDate.getMonth() + 1,
-      1
+      1,
     );
     startOfNextMonth.setHours(0, 0, 0, 0);
     const startOfYear = new Date(reportDate.getFullYear(), 0, 1);
@@ -212,7 +220,7 @@ export async function POST(req: NextRequest) {
 
     const monthLabel = reportDate.toLocaleDateString("id-ID", {
       month: "long",
-      year: "numeric"
+      year: "numeric",
     });
 
     await refreshSummary(
@@ -220,14 +228,14 @@ export async function POST(req: NextRequest) {
       monthKey,
       `MTD ${monthLabel}`,
       startOfMonth,
-      startOfNextMonth
+      startOfNextMonth,
     );
     await refreshSummary(
       "ytd",
       yearKey,
       `YTD ${reportDate.getFullYear()}`,
       startOfYear,
-      startOfNextYear
+      startOfNextYear,
     );
 
     return NextResponse.json({ success: true, data: newReport[0] });
@@ -235,7 +243,7 @@ export async function POST(req: NextRequest) {
     console.error("API /api/reports Error:", e);
     return NextResponse.json(
       { error: "Terjadi kesalahan pada server saat menyimpan data." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

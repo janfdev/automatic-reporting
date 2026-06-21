@@ -66,14 +66,16 @@ const STATUS_LABELS: Record<Status, string> = {
 };
 
 const STATUS_COLORS: Record<Status, string> = {
-  open: "bg-red-100 text-red-700",
-  in_progress: "bg-yellow-100 text-yellow-700",
-  resolved: "bg-green-100 text-green-700",
+  open: "bg-red-500/10 text-red-700 dark:text-red-400",
+  in_progress: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  resolved: "bg-green-500/10 text-green-700 dark:text-green-400",
 };
 
 function StatusBadge({ status }: { status: Status }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status]}`}
+    >
       {STATUS_LABELS[status]}
     </span>
   );
@@ -100,7 +102,9 @@ export function SupportManagement({ type }: SupportManagementProps) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/dashboard/support?page=${p}&limit=${limit}&type=${type}`);
+      const res = await fetch(
+        `/api/dashboard/support?page=${p}&limit=${limit}&type=${type}`,
+      );
       const data: ReportsResponse = await res.json();
       if (!res.ok) throw new Error("fetch failed");
       setReports(data.reports);
@@ -115,22 +119,24 @@ export function SupportManagement({ type }: SupportManagementProps) {
   useEffect(() => {
     setPage(1);
     loadReports(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
 
   useEffect(() => {
     loadReports(page);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const updateStatus = async (
     reportId: string,
     field: "supportStatus" | "kendalaStatus",
-    status: string
+    status: string,
   ) => {
     // Optimistic update
     setReports((prev) =>
-      prev.map((r) => (r.id === reportId ? { ...r, [field]: status as Status } : r))
+      prev.map((r) =>
+        r.id === reportId ? { ...r, [field]: status as Status } : r,
+      ),
     );
     try {
       const res = await fetch("/api/dashboard/reports/status", {
@@ -153,7 +159,7 @@ export function SupportManagement({ type }: SupportManagementProps) {
 
   const isSupport = type === "support";
   const title = isSupport ? "Daftar Need Support" : "Daftar Kendala";
-  const desc  = isSupport
+  const desc = isSupport
     ? "Laporan yang membutuhkan dukungan dari kasir."
     : "Laporan kendala yang diinput oleh kasir.";
 
@@ -187,7 +193,9 @@ export function SupportManagement({ type }: SupportManagementProps) {
           disabled={loading}
           className="shrink-0"
         >
-          <RefreshCcw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCcw
+            className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </CardHeader>
@@ -200,7 +208,9 @@ export function SupportManagement({ type }: SupportManagementProps) {
               <div className="flex justify-between items-start gap-2">
                 <div>
                   <p className="text-sm font-semibold">{rep.storeName}</p>
-                  <p className="text-xs text-muted-foreground">{rep.authorName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {rep.authorName}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(rep.reportDate).toLocaleDateString("id-ID")}
                   </p>
@@ -218,7 +228,11 @@ export function SupportManagement({ type }: SupportManagementProps) {
                 <Select
                   value={isSupport ? rep.supportStatus : rep.kendalaStatus}
                   onValueChange={(v) =>
-                    updateStatus(rep.id, isSupport ? "supportStatus" : "kendalaStatus", v)
+                    updateStatus(
+                      rep.id,
+                      isSupport ? "supportStatus" : "kendalaStatus",
+                      v,
+                    )
                   }
                 >
                   <SelectTrigger className="w-full text-xs h-8">
@@ -258,25 +272,39 @@ export function SupportManagement({ type }: SupportManagementProps) {
                 <TableRow key={rep.id}>
                   <TableCell className="whitespace-nowrap text-xs">
                     {new Date(rep.reportDate).toLocaleDateString("id-ID", {
-                      day: "2-digit", month: "short", year: "numeric",
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
                     })}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap font-medium">{rep.storeName}</TableCell>
-                  <TableCell className="whitespace-nowrap text-xs">{rep.authorName}</TableCell>
+                  <TableCell className="whitespace-nowrap font-medium">
+                    {rep.storeName}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-xs">
+                    {rep.authorName}
+                  </TableCell>
                   <TableCell className="max-w-xs">
                     <p className="text-xs text-gray-700 line-clamp-3 whitespace-pre-wrap">
                       {isSupport ? rep.needSupport : rep.formKendala}
                     </p>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={isSupport ? rep.supportStatus : rep.kendalaStatus} />
+                    <StatusBadge
+                      status={isSupport ? rep.supportStatus : rep.kendalaStatus}
+                    />
                   </TableCell>
                   {canChangeStatus && (
                     <TableCell>
                       <Select
-                        value={isSupport ? rep.supportStatus : rep.kendalaStatus}
+                        value={
+                          isSupport ? rep.supportStatus : rep.kendalaStatus
+                        }
                         onValueChange={(v) =>
-                          updateStatus(rep.id, isSupport ? "supportStatus" : "kendalaStatus", v)
+                          updateStatus(
+                            rep.id,
+                            isSupport ? "supportStatus" : "kendalaStatus",
+                            v,
+                          )
                         }
                       >
                         <SelectTrigger className="w-[140px] text-xs h-8">
@@ -284,7 +312,9 @@ export function SupportManagement({ type }: SupportManagementProps) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="open">Open</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="in_progress">
+                            In Progress
+                          </SelectItem>
                           <SelectItem value="resolved">Resolved</SelectItem>
                         </SelectContent>
                       </Select>
@@ -294,7 +324,10 @@ export function SupportManagement({ type }: SupportManagementProps) {
               ))}
               {reports.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={canChangeStatus ? 6 : 5} className="h-24 text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={canChangeStatus ? 6 : 5}
+                    className="h-24 text-center text-sm text-muted-foreground"
+                  >
                     Tidak ada data ditemukan.
                   </TableCell>
                 </TableRow>
@@ -309,7 +342,10 @@ export function SupportManagement({ type }: SupportManagementProps) {
             <Pagination className="justify-center sm:justify-end">
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} />
+                  <PaginationPrevious
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  />
                 </PaginationItem>
                 <PaginationItem className="sm:hidden">
                   <span className="flex h-9 items-center px-3 text-sm text-muted-foreground">
@@ -317,14 +353,22 @@ export function SupportManagement({ type }: SupportManagementProps) {
                   </span>
                 </PaginationItem>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => Math.abs(p - page) <= 1)
-                  .map(p => (
+                  .filter((p) => Math.abs(p - page) <= 1)
+                  .map((p) => (
                     <PaginationItem key={p} className="hidden sm:list-item">
-                      <PaginationLink isActive={p === page} onClick={() => setPage(p)}>{p}</PaginationLink>
+                      <PaginationLink
+                        isActive={p === page}
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </PaginationLink>
                     </PaginationItem>
                   ))}
                 <PaginationItem>
-                  <PaginationNext disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} />
+                  <PaginationNext
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>

@@ -16,7 +16,7 @@ export const navGroups: NavGroup[] = [
         icon: "dashboard",
         isActive: false,
         shortcut: ["d", "d"],
-        items: []
+        items: [],
       },
       {
         title: "Users",
@@ -24,7 +24,7 @@ export const navGroups: NavGroup[] = [
         icon: "teams",
         shortcut: ["u", "u"],
         isActive: false,
-        items: []
+        items: [],
       },
       {
         title: "Stores",
@@ -32,7 +32,7 @@ export const navGroups: NavGroup[] = [
         icon: "store",
         shortcut: ["s", "t"],
         isActive: false,
-        items: []
+        items: [],
       },
       {
         title: "Reports",
@@ -40,7 +40,7 @@ export const navGroups: NavGroup[] = [
         icon: "forms",
         shortcut: ["r", "r"],
         isActive: false,
-        items: []
+        items: [],
       },
       {
         title: "Need Support",
@@ -48,7 +48,7 @@ export const navGroups: NavGroup[] = [
         icon: "help",
         shortcut: ["n", "s"],
         isActive: false,
-        items: []
+        items: [],
       },
       {
         title: "Kendala",
@@ -56,16 +56,8 @@ export const navGroups: NavGroup[] = [
         icon: "warning",
         shortcut: ["k", "d"],
         isActive: false,
-        items: []
+        items: [],
       },
-      {
-        title: "WhatsApp",
-        url: "/admin/dashboard/whatsapp",
-        icon: "chat",
-        shortcut: ["w", "a"],
-        isActive: false,
-        items: []
-      }
-    ]
-  }
+    ],
+  },
 ];

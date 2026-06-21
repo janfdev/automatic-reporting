@@ -56,7 +56,6 @@ MTD
 
 *Shrinkage Management*
 (Losses, waste)
-
 * Waste: Rp {{ WASTE }}
 * Losses: Rp {{ LOSSES }}
 
@@ -71,7 +70,7 @@ Have a *Bright* Day🌤️`;
 
 export function renderTemplate(
   template: string,
-  mapping: Record<string, string | number>
+  mapping: Record<string, string | number>,
 ) {
   return template.replace(/{{\s*(\w+)\s*}}/g, (match, key) => {
     const val = mapping[key.toUpperCase()];
@@ -91,8 +90,8 @@ export async function loadPeriodSummary(params: {
     where: and(
       eq(storeReportSummaries.storeId, params.storeId),
       eq(storeReportSummaries.periodType, params.periodType),
-      eq(storeReportSummaries.periodKey, params.periodKey)
-    )
+      eq(storeReportSummaries.periodKey, params.periodKey),
+    ),
   });
 
   if (summary) return summary;
@@ -103,15 +102,15 @@ export async function loadPeriodSummary(params: {
       totalSales: sql<number>`coalesce(sum(${dailyReports.totalSales}), 0)`,
       salesGroceries: sql<number>`coalesce(sum(${dailyReports.salesGroceries}), 0)`,
       salesLpg: sql<number>`coalesce(sum(${dailyReports.salesLpg}), 0)`,
-      salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`
+      salesPelumas: sql<number>`coalesce(sum(${dailyReports.salesPelumas}), 0)`,
     })
     .from(dailyReports)
     .where(
       and(
         eq(dailyReports.storeId, params.storeId),
         gte(dailyReports.reportDate, params.periodStart),
-        lt(dailyReports.reportDate, params.periodEnd)
-      )
+        lt(dailyReports.reportDate, params.periodEnd),
+      ),
     );
 
   return {
@@ -129,13 +128,54 @@ export async function loadPeriodSummary(params: {
     salesPelumas: Number(totals?.salesPelumas ?? 0),
     targetSpdSnapshot: 0,
     lastReportDate: params.periodEnd,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
+}
+
+/**
+ * Mengisi celah tanggal dengan Rp 0 untuk hari-hari yang tidak ada laporan.
+ * Menghasilkan baris per hari dari `from` sampai `to` (inklusif).
+ */
+function fmtDay(date: Date): string {
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+}
+
+export function fillDailySalesGaps(
+  reports: Array<{
+    reportDate: Date | string | null;
+    totalSales: number | null;
+  }>,
+  from: Date,
+  to: Date,
+): string {
+  // Akumulasi sales per tanggal (jaga-jaga jika ada duplikat hari)
+  const salesMap = new Map<string, number>();
+  for (const r of reports) {
+    if (!r.reportDate) continue;
+    const d = new Date(r.reportDate);
+    const key = fmtDay(d);
+    salesMap.set(key, (salesMap.get(key) ?? 0) + (r.totalSales || 0));
+  }
+
+  // Jalan dari `from` ke `to`, isi Rp 0 jika hari tidak ada laporan
+  const lines: string[] = [];
+  const cursor = new Date(from);
+  cursor.setHours(0, 0, 0, 0);
+  const endDay = new Date(to);
+  endDay.setHours(23, 59, 59, 999);
+
+  while (cursor <= endDay) {
+    const key = fmtDay(cursor);
+    lines.push(`${key} : ${formatCurrency(salesMap.get(key) ?? 0)}`);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return lines.length > 0 ? lines.join("\n") : "Belum ada data sales bulan ini";
 }
 
 export function getMonthLabel(date: Date) {
   return date.toLocaleDateString("id-ID", {
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 }

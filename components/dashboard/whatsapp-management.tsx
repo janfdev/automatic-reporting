@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Plus, QrCode, RefreshCcw, Smartphone, Users } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  QrCode,
+  RefreshCcw,
+  Smartphone,
+  Users,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -16,7 +23,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +34,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 
 type Device = {
@@ -116,14 +123,16 @@ export function WhatsAppManagement() {
       const json = await res.json();
       if (json.success) {
         toast.success(
-          `Berhasil sync ${json.synced?.length || 0} group dari Fonnte!`
+          `Berhasil sync ${json.synced?.length || 0} group dari Fonnte!`,
         );
         loadGroups(1);
       } else {
         toast.error(json.error || "Gagal sync group.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Terjadi kesalahan saat sync group.");
+      toast.error(
+        e instanceof Error ? e.message : "Terjadi kesalahan saat sync group.",
+      );
     } finally {
       setSyncing(false);
     }
@@ -141,7 +150,7 @@ export function WhatsAppManagement() {
       const res = await fetch("/api/whatsapp/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, device: newDevice })
+        body: JSON.stringify({ name: newName, device: newDevice }),
       });
       const json = await res.json();
       if (json.status) {
@@ -169,7 +178,7 @@ export function WhatsAppManagement() {
       const res = await fetch("/api/whatsapp/qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ device: deviceNumber })
+        body: JSON.stringify({ device: deviceNumber }),
       });
       const json = await res.json();
       if (json.status && json.url) {
@@ -248,8 +257,8 @@ export function WhatsAppManagement() {
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                       dev.status === "connect"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-red-100 text-red-800"
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-700 dark:text-red-400"
                     }`}
                   >
                     {dev.status}
@@ -304,8 +313,8 @@ export function WhatsAppManagement() {
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                           dev.status === "connect"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                            : "bg-red-500/10 text-red-700 dark:text-red-400"
                         }`}
                       >
                         {dev.status}
@@ -504,62 +513,65 @@ export function WhatsAppManagement() {
             </div>
           ) : (
             <>
-            <div className="space-y-3 sm:hidden">
-              {groups.map((g) => (
-                <div key={g.id} className="rounded-lg border p-3">
-                  <p className="text-sm font-semibold">{g.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground font-mono">{g.groupId}</p>
-                </div>
-              ))}
-              {groups.length === 0 && (
-                <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-                  Belum ada group. Klik "Sync Groups" untuk mengambil group dari Fonnte.
-                </div>
-              )}
-            </div>
-            <div className="overflow-x-auto rounded-md border hidden sm:block">
-              <Table className="min-w-175 lg:min-w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama Group</TableHead>
-                    <TableHead>Group ID</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {groups.map((g) => (
-                    <TableRow key={g.id}>
-                      <TableCell className="font-medium">{g.name}</TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
-                        {g.groupId}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex items-center justify-between border-t px-4 py-3">
-              <p className="text-sm text-muted-foreground">
-                Halaman {groupPage} dari {groupTotalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={groupPage <= 1}
-                  onClick={() => loadGroups(groupPage - 1)}
-                >
-                  Sebelumnya
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={groupPage >= groupTotalPages}
-                  onClick={() => loadGroups(groupPage + 1)}
-                >
-                  Selanjutnya
-                </Button>
+              <div className="space-y-3 sm:hidden">
+                {groups.map((g) => (
+                  <div key={g.id} className="rounded-lg border p-3">
+                    <p className="text-sm font-semibold">{g.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground font-mono">
+                      {g.groupId}
+                    </p>
+                  </div>
+                ))}
+                {groups.length === 0 && (
+                  <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+                    Belum ada group. Klik "Sync Groups" untuk mengambil group
+                    dari Fonnte.
+                  </div>
+                )}
               </div>
-            </div>
+              <div className="overflow-x-auto rounded-md border hidden sm:block">
+                <Table className="min-w-175 lg:min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nama Group</TableHead>
+                      <TableHead>Group ID</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groups.map((g) => (
+                      <TableRow key={g.id}>
+                        <TableCell className="font-medium">{g.name}</TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">
+                          {g.groupId}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex items-center justify-between border-t px-4 py-3">
+                <p className="text-sm text-muted-foreground">
+                  Halaman {groupPage} dari {groupTotalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={groupPage <= 1}
+                    onClick={() => loadGroups(groupPage - 1)}
+                  >
+                    Sebelumnya
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={groupPage >= groupTotalPages}
+                    onClick={() => loadGroups(groupPage + 1)}
+                  >
+                    Selanjutnya
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </CardContent>

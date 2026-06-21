@@ -1,5 +1,11 @@
 import { db } from "@/db";
-import { dailyReports, store, storeReportSummaries, waGroups, users } from "@/db/schema";
+import {
+  dailyReports,
+  store,
+  storeReportSummaries,
+  waGroups,
+  users,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -8,12 +14,13 @@ import {
   WA_TEMPLATE,
   renderTemplate,
   loadPeriodSummary,
-  getMonthLabel
+  getMonthLabel,
+  fillDailySalesGaps,
 } from "@/lib/wa-message";
 
 const sendWaGroupSchema = z.object({
   reportId: z.string(),
-  groupId: z.string()
+  groupId: z.string(),
 });
 
 export async function POST(req: Request) {
@@ -25,7 +32,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return Response.json(
       { success: false, error: "Payload tidak valid" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -40,20 +47,20 @@ export async function POST(req: Request) {
   if (group.length === 0) {
     return Response.json(
       { success: false, error: "Group tidak ditemukan" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   const userRec = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id)
+    where: eq(users.id, session.user.id),
   });
   if (!userRec?.storeId) {
     return Response.json(
       {
         success: false,
-        error: "Akun ini belum memiliki outlet (store) yang ditetapkan."
+        error: "Akun ini belum memiliki outlet (store) yang ditetapkan.",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -69,7 +76,10 @@ export async function POST(req: Request) {
   }
 
   if (userRec.role !== "admin" && report.storeId !== userRec.storeId) {
-    return Response.json({ success: false, error: "Forbidden" }, { status: 403 });
+    return Response.json(
+      { success: false, error: "Forbidden" },
+      { status: 403 },
+    );
   }
 
   const storeList = await db
@@ -85,13 +95,13 @@ export async function POST(req: Request) {
   const startOfMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth(),
-    1
+    1,
   );
   startOfMonth.setHours(0, 0, 0, 0);
   const startOfNextMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth() + 1,
-    1
+    1,
   );
   startOfNextMonth.setHours(0, 0, 0, 0);
   const startOfYear = new Date(reportDate.getFullYear(), 0, 1);
@@ -108,7 +118,7 @@ export async function POST(req: Request) {
     periodKey: monthKey,
     periodLabel: `MTD ${getMonthLabel(reportDate)}`,
     periodStart: startOfMonth,
-    periodEnd: startOfNextMonth
+    periodEnd: startOfNextMonth,
   });
 
   const ytdSummary = await loadPeriodSummary({
@@ -117,31 +127,31 @@ export async function POST(req: Request) {
     periodKey: yearKey,
     periodLabel: `YTD ${reportDate.getFullYear()}`,
     periodStart: startOfYear,
-    periodEnd: startOfNextYear
+    periodEnd: startOfNextYear,
   });
 
   const monthlyReports = await db
     .select({
       reportDate: dailyReports.reportDate,
-      totalSales: dailyReports.totalSales
+      totalSales: dailyReports.totalSales,
     })
     .from(dailyReports)
     .where(
       and(
         eq(dailyReports.storeId, report.storeId),
         gte(dailyReports.reportDate, startOfMonth),
-        lt(dailyReports.reportDate, startOfNextMonth)
-      )
+        lt(dailyReports.reportDate, startOfNextMonth),
+      ),
     )
     .orderBy(dailyReports.reportDate);
 
-  const salesDetailsList = monthlyReports
-    .map((r) => {
-      const d = new Date(r.reportDate);
-      const fmtDate = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-      return `${fmtDate} : ${formatCurrency(r.totalSales || 0)}`;
-    })
-    .join("\n");
+  // Tampilkan seluruh hari dalam bulan (hari kosong = Rp 0)
+  const endOfMonth = new Date(startOfNextMonth.getTime() - 1);
+  const salesDetailsList = fillDailySalesGaps(
+    monthlyReports,
+    startOfMonth,
+    endOfMonth,
+  );
 
   const monthlySummaries = await db
     .select()
@@ -149,8 +159,8 @@ export async function POST(req: Request) {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "mtd")
-      )
+        eq(storeReportSummaries.periodType, "mtd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(6);
@@ -169,8 +179,8 @@ export async function POST(req: Request) {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "ytd")
-      )
+        eq(storeReportSummaries.periodType, "ytd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(3);
@@ -191,7 +201,7 @@ export async function POST(req: Request) {
   const dateString = reportDate.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 
   const itemOos = Array.isArray(report.itemOos) ? report.itemOos : [];
@@ -221,7 +231,7 @@ export async function POST(req: Request) {
     OP_HOURS: storeData?.operationalHours || "-",
     PRICE_CLUSTER: storeData?.priceCluster || "-",
     HEALTH_STATUS: healthStatus,
-    SALES_DETAILS_LIST: salesDetailsList || "Belum ada data sales bulan ini",
+    SALES_DETAILS_LIST: salesDetailsList,
     DETAIL_GROCERIES: formatCurrency(report.salesGroceries || 0),
     DETAIL_LPG: formatCurrency(report.salesLpg || 0),
     DETAIL_PELUMAS: formatCurrency(report.salesPelumas || 0),
@@ -243,7 +253,7 @@ export async function POST(req: Request) {
     WASTE: (report.waste || 0).toLocaleString("id-ID"),
     LOSSES: (report.losses || 0).toLocaleString("id-ID"),
     KENDALA: report.formKendala || "-",
-    NEED_SUPPORT: report.needSupport || "-"
+    NEED_SUPPORT: report.needSupport || "-",
   };
 
   const message = renderTemplate(WA_TEMPLATE, mapping);
@@ -252,8 +262,11 @@ export async function POST(req: Request) {
     const token = process.env.FONNTE_TOKEN_WA;
     if (!token) {
       return Response.json(
-        { success: false, error: "Konfigurasi gateway belum lengkap: FONNTE_TOKEN" },
-        { status: 500 }
+        {
+          success: false,
+          error: "Konfigurasi gateway belum lengkap: FONNTE_TOKEN",
+        },
+        { status: 500 },
       );
     }
 
@@ -265,9 +278,9 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         Authorization: token,
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: waBody.toString()
+      body: waBody.toString(),
     });
 
     const rawResponse = await res.text();
@@ -300,22 +313,22 @@ export async function POST(req: Request) {
           success: false,
           error: String(reason),
           gatewayResponse: fonnteResponse,
-          groupName: group[0].name
+          groupName: group[0].name,
         },
-        { status: 502 }
+        { status: 502 },
       );
     }
 
     return Response.json({
       success: true,
       groupName: group[0].name,
-      gatewayResponse: fonnteResponse
+      gatewayResponse: fonnteResponse,
     });
   } catch (error) {
     console.error("Error sending WhatsApp to group:", error);
     return Response.json(
       { success: false, error: "Gateway Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,11 +1,12 @@
 import { db } from "@/db";
 import { dailyReports, store, storeReportSummaries, users } from "@/db/schema";
 import {
+  fillDailySalesGaps,
   formatCurrency,
   getMonthLabel,
   loadPeriodSummary,
   renderTemplate,
-  WA_TEMPLATE
+  WA_TEMPLATE,
 } from "@/lib/wa-message";
 import { and, eq, gte, lt, sql } from "drizzle-orm";
 
@@ -22,7 +23,7 @@ export class WaReportMessageError extends Error {
 function assertWaReportMessageError(
   condition: unknown,
   message: string,
-  status = 400
+  status = 400,
 ): asserts condition {
   if (!condition) {
     throw new WaReportMessageError(message, status);
@@ -34,13 +35,13 @@ export async function buildWaReportMessage(params: {
   sessionUserId: string;
 }) {
   const userRec = await db.query.users.findFirst({
-    where: eq(users.id, params.sessionUserId)
+    where: eq(users.id, params.sessionUserId),
   });
 
   assertWaReportMessageError(
     userRec?.storeId,
     "Akun ini belum memiliki outlet (store) yang ditetapkan.",
-    400
+    400,
   );
 
   const reportList = await db
@@ -70,13 +71,13 @@ export async function buildWaReportMessage(params: {
   const startOfMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth(),
-    1
+    1,
   );
   startOfMonth.setHours(0, 0, 0, 0);
   const startOfNextMonth = new Date(
     reportDate.getFullYear(),
     reportDate.getMonth() + 1,
-    1
+    1,
   );
   startOfNextMonth.setHours(0, 0, 0, 0);
   const startOfYear = new Date(reportDate.getFullYear(), 0, 1);
@@ -93,7 +94,7 @@ export async function buildWaReportMessage(params: {
     periodKey: monthKey,
     periodLabel: `MTD ${getMonthLabel(reportDate)}`,
     periodStart: startOfMonth,
-    periodEnd: startOfNextMonth
+    periodEnd: startOfNextMonth,
   });
 
   const ytdSummary = await loadPeriodSummary({
@@ -102,31 +103,30 @@ export async function buildWaReportMessage(params: {
     periodKey: yearKey,
     periodLabel: `YTD ${reportDate.getFullYear()}`,
     periodStart: startOfYear,
-    periodEnd: startOfNextYear
+    periodEnd: startOfNextYear,
   });
 
   const monthlyReports = await db
     .select({
       reportDate: dailyReports.reportDate,
-      totalSales: dailyReports.totalSales
+      totalSales: dailyReports.totalSales,
     })
     .from(dailyReports)
     .where(
       and(
         eq(dailyReports.storeId, report.storeId),
         gte(dailyReports.reportDate, startOfMonth),
-        lt(dailyReports.reportDate, startOfNextMonth)
-      )
+        lt(dailyReports.reportDate, startOfNextMonth),
+      ),
     )
     .orderBy(dailyReports.reportDate);
 
-  const salesDetailsList = monthlyReports
-    .map((r) => {
-      const d = new Date(r.reportDate);
-      const fmtDate = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-      return `${fmtDate} : ${formatCurrency(r.totalSales || 0)}`;
-    })
-    .join("\n");
+  // Tampilkan rincian sales sampai tanggal report saja (bukan seluruh bulan)
+  const salesDetailsList = fillDailySalesGaps(
+    monthlyReports,
+    startOfMonth,
+    reportDate,
+  );
 
   const monthlySummaries = await db
     .select()
@@ -134,8 +134,8 @@ export async function buildWaReportMessage(params: {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "mtd")
-      )
+        eq(storeReportSummaries.periodType, "mtd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(6);
@@ -154,8 +154,8 @@ export async function buildWaReportMessage(params: {
     .where(
       and(
         eq(storeReportSummaries.storeId, report.storeId),
-        eq(storeReportSummaries.periodType, "ytd")
-      )
+        eq(storeReportSummaries.periodType, "ytd"),
+      ),
     )
     .orderBy(sql`${storeReportSummaries.periodKey} DESC`)
     .limit(3);
@@ -176,7 +176,7 @@ export async function buildWaReportMessage(params: {
   const dateString = reportDate.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 
   const itemOos = Array.isArray(report.itemOos) ? report.itemOos : [];
@@ -206,7 +206,7 @@ export async function buildWaReportMessage(params: {
     OP_HOURS: storeData?.operationalHours || "-",
     PRICE_CLUSTER: storeData?.priceCluster || "-",
     HEALTH_STATUS: healthStatus,
-    SALES_DETAILS_LIST: salesDetailsList || "Belum ada data sales bulan ini",
+    SALES_DETAILS_LIST: salesDetailsList,
     DETAIL_GROCERIES: formatCurrency(report.salesGroceries || 0),
     DETAIL_LPG: formatCurrency(report.salesLpg || 0),
     DETAIL_PELUMAS: formatCurrency(report.salesPelumas || 0),
@@ -228,7 +228,7 @@ export async function buildWaReportMessage(params: {
     WASTE: (report.waste || 0).toLocaleString("id-ID"),
     LOSSES: (report.losses || 0).toLocaleString("id-ID"),
     KENDALA: report.formKendala || "-",
-    NEED_SUPPORT: report.needSupport || "-"
+    NEED_SUPPORT: report.needSupport || "-",
   };
 
   const message = renderTemplate(WA_TEMPLATE, mapping);
@@ -239,6 +239,6 @@ export async function buildWaReportMessage(params: {
     storeData,
     reportDate,
     mtdSummary,
-    ytdSummary
+    ytdSummary,
   };
 }

@@ -13,7 +13,9 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx db/seed.ts",
     "db:reset": "tsx db/reset.ts",
-    "test": "jest"
+    "test": "jest",
+    "test:k6:smoke": "k6 run k6-smoke-test.js",
+    "test:k6:load": "k6 run k6-load-test.js"
   },
   "dependencies": {
     "@faker-js/faker": "^10.4.0",
