@@ -6,8 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckSquare } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
-import { parseNumberInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+function formatInt(val: number | string | undefined | null): string {
+  if (!val || val === 0) return "";
+  return String(val);
+}
+
+function parseIntInput(raw: string): number {
+  const digits = raw.replace(/\D/g, "");
+  if (digits === "") return 0;
+  return Math.min(Number(digits), 100);
+}
 
 export function DistributionCard() {
   const { control } = useFormContext<ReportFormValues>();
@@ -34,14 +44,11 @@ export function DistributionCard() {
                   type="text"
                   inputMode="numeric"
                   placeholder="0"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(parseNumberInput(e.target.value))
-                  }
+                  value={formatInt(field.value)}
+                  onChange={(e) => field.onChange(parseIntInput(e.target.value))}
                   className={cn(
                     "bg-background border-input",
-                    fieldState.error &&
-                      "border-red-500 focus-visible:ring-red-500"
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
                   )}
                 />
                 {fieldState.error && (
@@ -66,14 +73,11 @@ export function DistributionCard() {
                   type="text"
                   inputMode="numeric"
                   placeholder="0"
-                  value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(parseNumberInput(e.target.value))
-                  }
+                  value={formatInt(field.value)}
+                  onChange={(e) => field.onChange(parseIntInput(e.target.value))}
                   className={cn(
                     "bg-background border-input",
-                    fieldState.error &&
-                      "border-red-500 focus-visible:ring-red-500"
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
                   )}
                 />
                 {fieldState.error && (

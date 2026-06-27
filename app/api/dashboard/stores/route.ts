@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { desc, eq, inArray, count } from "drizzle-orm";
+import { desc, eq, inArray, count, and } from "drizzle-orm";
 import { db } from "@/db";
 import { store, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -11,29 +11,40 @@ function generateId() {
 export async function GET(req: Request) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session || session.user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized", stores: [], regions: [] }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "10")));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "100")));
   const offset = (page - 1) * limit;
+  const regionFilter = searchParams.get("region");
+
+  const allStores = await db.select({ region: store.region }).from(store);
+  const regions = [...new Set(allStores.map(s => s.region).filter(Boolean))].sort();
+
+  const whereClause = regionFilter && regionFilter !== "all"
+    ? and(eq(store.region, regionFilter))
+    : undefined;
 
   const [totalResult] = await db
     .select({ total: count() })
-    .from(store);
+    .from(store)
+    .where(whereClause);
 
   const total = Number(totalResult?.total ?? 0);
 
   const rows = await db
     .select()
     .from(store)
+    .where(whereClause)
     .orderBy(desc(store.createdAt))
     .limit(limit)
     .offset(offset);
 
   return NextResponse.json({
     stores: rows,
+    regions,
     pagination: {
       page,
       limit,
@@ -51,7 +62,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, type, location, targetSpd, operationalYear, operationalHours, priceCluster, seUserId, assignedUserIds } = body;
+    const { name, type, region, location, targetSpd, operationalYear, operationalHours, priceCluster, seUserId, assignedUserIds } = body;
     const id = generateId();
     const dateNow = new Date();
 
@@ -69,6 +80,7 @@ export async function POST(req: Request) {
       id,
       name,
       type: type || "Bright Store",
+      region: region || null,
       location,
       seName,
       saCount: saCount || null,
@@ -101,7 +113,7 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { id, name, type, location, targetSpd, operationalYear, operationalHours, priceCluster, seUserId, assignedUserIds } = body;
+    const { id, name, type, region, location, targetSpd, operationalYear, operationalHours, priceCluster, seUserId, assignedUserIds } = body;
     const dateNow = new Date();
 
     let seName: string | null = null;
@@ -118,6 +130,7 @@ export async function PUT(req: Request) {
       .set({
         name,
         type,
+        region: region || null,
         location,
         seName,
         saCount: saCount || null,

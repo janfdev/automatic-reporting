@@ -72,6 +72,7 @@ export const store = pgTable("stores", {
   id: varchar("id", { length: 255 }).primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(), // Bright Store
+  region: text("region"), // Region/Wilayah
   location: text("location").notNull(),
   operationalYear: integer("operational_year"),
   seName: text("se_name"),

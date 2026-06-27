@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     ) => {
       const [totals] = await db
         .select({
-          reportCount: sql<number>`count(*)`,
+          reportCount: sql<number>`count(distinct date_trunc('day', ${dailyReports.reportDate}))::int`,
           totalSales: sql<number>`coalesce(sum(${dailyReports.totalSales}), 0)`,
           salesGroceries: sql<number>`coalesce(sum(${dailyReports.salesGroceries}), 0)`,
           salesLpg: sql<number>`coalesce(sum(${dailyReports.salesLpg}), 0)`,
@@ -243,6 +243,52 @@ export async function POST(req: NextRequest) {
     console.error("API /api/reports Error:", e);
     return NextResponse.json(
       { error: "Terjadi kesalahan pada server saat menyimpan data." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userRec = await db.query.users.findFirst({
+      where: eq(users.id, session.user.id),
+    });
+
+    if (!userRec?.storeId) {
+      return NextResponse.json({ submitted: false, storeName: null });
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 1, 0, 0); // 00:01
+
+    const report = await db
+      .select({ id: dailyReports.id })
+      .from(dailyReports)
+      .where(
+        and(
+          eq(dailyReports.storeId, userRec.storeId),
+          gte(dailyReports.reportDate, startOfToday),
+        ),
+      )
+      .limit(1);
+
+    const storeRec = await db.query.store.findFirst({
+      where: eq(store.id, userRec.storeId),
+    });
+
+    return NextResponse.json({
+      submitted: report.length > 0,
+      storeName: storeRec?.name || null,
+    });
+  } catch (e) {
+    console.error("API /api/reports GET Error:", e);
+    return NextResponse.json(
+      { error: "Terjadi kesalahan pada server." },
       { status: 500 },
     );
   }

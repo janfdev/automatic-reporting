@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Download,
   Loader2,
-  LogOut,
   Users,
   Store,
   BarChart3,
@@ -18,7 +17,6 @@ import {
   Info,
 } from "lucide-react";
 import { Tooltip } from "recharts";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   CartesianGrid,
@@ -34,7 +32,7 @@ import {
   Area,
 } from "recharts";
 import { apiClient } from "@/lib/api-client";
-import { signOut } from "@/lib/auth-client";
+
 import PageContainer from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import Logo from "@/public/Logo_pertamina.png";
@@ -150,13 +148,18 @@ const chartConfig: ChartConfig = {
 };
 
 export function AdminDashboardTabs() {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [stores, setStores] = useState<StoreType[]>([]);
+  const [regions, setRegions] = useState<string[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedStore, setSelectedStore] = useState<string>("all");
+
+  const onRegionChange = (val: string) => {
+    setSelectedRegion(val);
+    setSelectedStore("all");
+  };
 
   // Default to last 14 days
   const [startDate, setStartDate] = useState<string>(() => {
@@ -177,11 +180,14 @@ export function AdminDashboardTabs() {
     let mounted = true;
     async function loadStores() {
       try {
-        const storesResult = await apiClient<{ stores: StoreType[] }>(
-          "/dashboard/stores",
+        const params = new URLSearchParams();
+        if (selectedRegion && selectedRegion !== "all") params.set("region", selectedRegion);
+        const storesResult = await apiClient<{ stores: StoreType[]; regions: string[] }>(
+          `/dashboard/stores?${params.toString()}`,
         );
         if (!mounted) return;
         setStores(storesResult.stores);
+        setRegions(storesResult.regions ?? []);
       } catch (error) {
         console.error("Failed to fetch stores", error);
       }
@@ -190,7 +196,7 @@ export function AdminDashboardTabs() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [selectedRegion]);
 
   // Load real Need Support data (top 10)
   useEffect(() => {
@@ -244,16 +250,7 @@ export function AdminDashboardTabs() {
     };
   }, [selectedStore, startDate, endDate]);
 
-  const onLogout = async () => {
-    setIsSigningOut(true);
-    try {
-      await signOut();
-      router.push("/login");
-      router.refresh();
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
+
 
   return (
     <PageContainer scrollable>
@@ -310,6 +307,25 @@ export function AdminDashboardTabs() {
 
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-blue-600 px-0.5">
+                Pilih Region
+              </span>
+              <Select value={selectedRegion} onValueChange={onRegionChange}>
+                <SelectTrigger className="w-[140px] h-9 bg-background border-border text-xs shadow-sm focus:ring-0">
+                  <SelectValue placeholder="Semua Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Region</SelectItem>
+                  {regions.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold text-blue-600 px-0.5">
                 Pilih Store
               </span>
               <Select value={selectedStore} onValueChange={setSelectedStore}>
@@ -341,21 +357,6 @@ export function AdminDashboardTabs() {
                   <Download className="h-3.5 w-3.5 text-gray-500" />
                   <span>Export Excel</span>
                 </a>
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                onClick={onLogout}
-                disabled={isSigningOut}
-                className="h-9 bg-red-600 hover:bg-red-700 text-white shadow-sm text-xs font-medium flex items-center gap-1.5 rounded-lg px-4"
-              >
-                {isSigningOut ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <LogOut className="h-3.5 w-3.5" />
-                )}
-                <span>Logout</span>
               </Button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +8,18 @@ import { Package } from "lucide-react";
 import { ReportFormValues } from "@/lib/validations/report";
 import { cn } from "@/lib/utils";
 
+function formatInt(val: number | string | undefined | null): string {
+  if (!val || val === 0) return "";
+  return String(val);
+}
+
+function parseIntInput(raw: string): number {
+  const digits = raw.replace(/\D/g, "");
+  return digits === "" ? 0 : Number(digits);
+}
+
 export function StockCard() {
-  const { register, formState: { errors } } = useFormContext<ReportFormValues>();
+  const { control } = useFormContext<ReportFormValues>();
 
   return (
     <Card className="border-0 shadow-sm rounded-xl">
@@ -22,48 +32,78 @@ export function StockCard() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label className="text-muted-foreground">LPG 3 Kg</Label>
-          <Input 
-            type="number" 
-            placeholder="0" 
-            {...register("stockLpg3kg")} 
-            className={cn(
-              "bg-background border-input",
-              errors.stockLpg3kg && "border-red-500 focus-visible:ring-red-500"
+          <Controller
+            control={control}
+            name="stockLpg3kg"
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatInt(field.value)}
+                  onChange={(e) => field.onChange(parseIntInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
-          {errors.stockLpg3kg && (
-            <p className="text-xs text-red-500 font-medium">{errors.stockLpg3kg.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <Label className="text-muted-foreground">LPG 5.5 Kg</Label>
-          <Input 
-            type="number" 
-            placeholder="0" 
-            {...register("stockLpg5kg")} 
-            className={cn(
-              "bg-background border-input",
-              errors.stockLpg5kg && "border-red-500 focus-visible:ring-red-500"
+          <Controller
+            control={control}
+            name="stockLpg5kg"
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatInt(field.value)}
+                  onChange={(e) => field.onChange(parseIntInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
-          {errors.stockLpg5kg && (
-            <p className="text-xs text-red-500 font-medium">{errors.stockLpg5kg.message}</p>
-          )}
         </div>
         <div className="space-y-2">
           <Label className="text-muted-foreground">LPG 12 Kg</Label>
-          <Input 
-            type="number" 
-            placeholder="0" 
-            {...register("stockLpg12kg")} 
-            className={cn(
-              "bg-background border-input",
-              errors.stockLpg12kg && "border-red-500 focus-visible:ring-red-500"
+          <Controller
+            control={control}
+            name="stockLpg12kg"
+            render={({ field, fieldState }) => (
+              <>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formatInt(field.value)}
+                  onChange={(e) => field.onChange(parseIntInput(e.target.value))}
+                  className={cn(
+                    "bg-background border-input",
+                    fieldState.error && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                />
+                {fieldState.error && (
+                  <p className="text-xs text-red-500 font-medium">{fieldState.error.message}</p>
+                )}
+              </>
             )}
           />
-          {errors.stockLpg12kg && (
-            <p className="text-xs text-red-500 font-medium">{errors.stockLpg12kg.message}</p>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ThemeModeToggle } from "@/components/themes/theme-mode-toggle";
-import { Loader2, Bell } from "lucide-react";
+import { Loader2, Bell, CheckCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Logo from "@/public/Logo_pertamina.png";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getInitials(nameOrEmail: string | undefined): string {
   if (!nameOrEmail) return "U";
@@ -26,8 +31,9 @@ interface AppHeaderProps {
 
 export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
   const [time, setTime] = useState<string>("");
+  const [reportSubmitted, setReportSubmitted] = useState<boolean | null>(null);
+  const [storeName, setStoreName] = useState<string | null>(null);
 
-  // Hook untuk jam real-time
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -49,13 +55,31 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    async function checkReport() {
+      try {
+        const res = await fetch("/api/reports");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) {
+          setReportSubmitted(data.submitted);
+          setStoreName(data.storeName);
+        }
+      } catch {
+        // silently ignore
+      }
+    }
+    checkReport();
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <header className="sticky top-0 z-20 w-full border-b bg-background/95 backdrop-blur p-2">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* --- Kiri: Logo & Branding --- */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center">
-            {/* Ganti src dengan path logo Pertamina Retail Anda */}
             <div className="relative w-[130px] h-[130px]">
               <Image
                 src={Logo}
@@ -78,14 +102,34 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
 
         {/* --- Kanan: Actions & Profile --- */}
         <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
           <ThemeModeToggle />
 
-          {/* Notification Icon */}
-          <div className="relative p-2 rounded-full bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
-          </div>
+          {/* Notification Bell */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative p-2 rounded-full bg-muted/50 hover:bg-muted cursor-pointer transition-colors">
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                {reportSubmitted === false && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              {reportSubmitted === null ? (
+                <p className="text-xs">Mengecek status laporan...</p>
+              ) : reportSubmitted ? (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <p className="text-xs font-medium">{storeName} sudah submit laporan hari ini</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <p className="text-xs font-medium">{storeName || "Store"} belum submit laporan hari ini</p>
+                </div>
+              )}
+            </TooltipContent>
+          </Tooltip>
 
           {/* User Profile */}
           <div className="flex items-center gap-3 pl-2 border-l ml-2">
@@ -108,7 +152,6 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
             </div>
           </div>
 
-          {/* Logout (Optional, if you want to keep it visible) */}
           <Button
             variant="ghost"
             size="icon"
