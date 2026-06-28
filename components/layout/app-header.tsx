@@ -79,18 +79,16 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* --- Kiri: Logo & Branding --- */}
         <div className="flex items-center gap-2">
-          <div className="flex flex-col items-center">
-            <div className="relative w-[130px] h-[130px]">
-              <Image
-                src={Logo}
-                alt="Logo Pertamina Retail"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
+          <div className="relative w-24 h-8 md:w-32 md:h-10 shrink-0">
+            <Image
+              src={Logo}
+              alt="Logo Pertamina Retail"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <h1 className="text-lg font-bold text-foreground hidden sm:block">
+          <h1 className="text-sm md:text-lg font-bold text-foreground hidden sm:block truncate">
             Sales Daily Report
           </h1>
         </div>
@@ -101,7 +99,7 @@ export function AppHeader({ session, isSigningOut, onLogout }: AppHeaderProps) {
         </div>
 
         {/* --- Kanan: Actions & Profile --- */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-3 shrink-0">
           <ThemeModeToggle />
 
           {/* Notification Bell */}

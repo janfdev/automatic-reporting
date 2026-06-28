@@ -256,32 +256,30 @@ export function AdminDashboardTabs() {
     <PageContainer scrollable>
       <div className="space-y-6 p-2 bg-background">
         {/* --- HEADER DASHBOARD --- */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b pb-4 bg-card p-4 rounded-xl shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="font-black text-xl tracking-tighter text-blue-800 flex items-center">
-                <div className="relative w-44 h-12">
-                  <Image
-                    src={Logo}
-                    alt="Pertamina Retail Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </div>
+        <div className="flex flex-col gap-4 border-b pb-4 bg-card p-4 rounded-xl shadow-sm">
+          {/* Baris atas: Logo + Title */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-32 h-10 md:w-44 md:h-12 shrink-0">
+              <Image
+                src={Logo}
+                alt="Pertamina Retail Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
-            <div className="border-l pl-4">
-              <h1 className="text-base font-bold text-foreground tracking-tight uppercase">
+            <div className="border-l pl-3 min-w-0">
+              <h1 className="text-sm md:text-base font-bold text-foreground tracking-tight uppercase truncate">
                 Sales Dashboard
               </h1>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                 Ringkasan Performa Seluruh Bright Store
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 ml-auto">
+          {/* Baris bawah: Filters + Export */}
+          <div className="flex flex-wrap items-end gap-2 md:gap-3">
             <div className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold text-blue-600 px-0.5">
                 Mulai Tanggal
@@ -290,7 +288,7 @@ export function AdminDashboardTabs() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-[140px] h-9 px-3 rounded-md bg-background dark:bg-card border border-border text-foreground text-xs shadow-sm focus:ring-0 focus:outline-none"
+                className="w-full sm:w-[140px] h-9 px-3 rounded-md bg-background dark:bg-card border border-border text-foreground text-xs shadow-sm focus:ring-0 focus:outline-none"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -301,7 +299,7 @@ export function AdminDashboardTabs() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-[140px] h-9 px-3 rounded-md bg-background dark:bg-card border border-border text-foreground text-xs shadow-sm focus:ring-0 focus:outline-none"
+                className="w-full sm:w-[140px] h-9 px-3 rounded-md bg-background dark:bg-card border border-border text-foreground text-xs shadow-sm focus:ring-0 focus:outline-none"
               />
             </div>
 
@@ -310,7 +308,7 @@ export function AdminDashboardTabs() {
                 Pilih Region
               </span>
               <Select value={selectedRegion} onValueChange={onRegionChange}>
-                <SelectTrigger className="w-[140px] h-9 bg-background border-border text-xs shadow-sm focus:ring-0">
+                <SelectTrigger className="w-full sm:w-[140px] h-9 bg-background border-border text-xs shadow-sm focus:ring-0">
                   <SelectValue placeholder="Semua Region" />
                 </SelectTrigger>
                 <SelectContent>
@@ -329,7 +327,7 @@ export function AdminDashboardTabs() {
                 Pilih Store
               </span>
               <Select value={selectedStore} onValueChange={setSelectedStore}>
-                <SelectTrigger className="w-[160px] h-9 bg-background border-border text-xs shadow-sm focus:ring-0">
+                <SelectTrigger className="w-full sm:w-[160px] h-9 bg-background border-border text-xs shadow-sm focus:ring-0">
                   <SelectValue placeholder="Semua Store" />
                 </SelectTrigger>
                 <SelectContent>
@@ -343,22 +341,20 @@ export function AdminDashboardTabs() {
               </Select>
             </div>
 
-            <div className="flex items-end gap-2 h-14 pt-5">
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-9 bg-background text-foreground border-border hover:bg-muted shadow-sm text-xs font-medium"
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-9 bg-background text-foreground border-border hover:bg-muted shadow-sm text-xs font-medium"
+            >
+              <a
+                href={`/api/dashboard/export-stores?storeId=${selectedStore}&startDate=${startDate}&endDate=${endDate}`}
+                className="flex items-center gap-1.5"
               >
-                <a
-                  href={`/api/dashboard/export-stores?storeId=${selectedStore}&startDate=${startDate}&endDate=${endDate}`}
-                  className="flex items-center gap-1.5"
-                >
-                  <Download className="h-3.5 w-3.5 text-gray-500" />
-                  <span>Export Excel</span>
-                </a>
-              </Button>
-            </div>
+                <Download className="h-3.5 w-3.5 text-gray-500" />
+                <span>Export Excel</span>
+              </a>
+            </Button>
           </div>
         </div>
 
@@ -393,7 +389,7 @@ export function AdminDashboardTabs() {
 
             <TabsContent value="analytics" className="space-y-6 mt-0">
               {/* --- ROW 1: BARIS KPI GRID COL-6 --- */}
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-3 w-full">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full">
                 {/* Total User */}
                 <Card className="bg-card border border-border shadow-sm rounded-xl p-4 flex flex-col justify-between">
                   <div className="flex items-start justify-between">
@@ -539,8 +535,8 @@ export function AdminDashboardTabs() {
               </div>
 
               {/* --- ROW 2: Trend Sales, Perbandingan, & Shrinkage --- */}
-              <div className="grid gap-4 md:grid-cols-12">
-                <Card className="md:col-span-6 bg-card border-none shadow-sm">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-12">
+                <Card className="md:col-span-6 bg-card border-none shadow-sm overflow-hidden">
                   <CardHeader className="p-4 pb-0">
                     <CardTitle className="text-sm font-bold text-foreground">
                       Trend Sales 7 Hari Terakhir (Semua Store)
@@ -626,7 +622,7 @@ export function AdminDashboardTabs() {
                   </CardContent>
                 </Card>
 
-                <Card className="md:col-span-3 bg-card border-none shadow-sm flex flex-col justify-between">
+                <Card className="md:col-span-3 bg-card border-none shadow-sm flex flex-col justify-between overflow-hidden">
                   <CardHeader className="p-4 pb-0">
                     <CardTitle className="text-sm font-bold text-foreground text-center">
                       Perbandingan Sales Hari Ini vs Kemarin
@@ -694,7 +690,7 @@ export function AdminDashboardTabs() {
                   </CardContent>
                 </Card>
 
-                <Card className="md:col-span-3 bg-card border-none shadow-sm flex flex-col justify-between">
+                <Card className="md:col-span-3 bg-card border-none shadow-sm flex flex-col justify-between overflow-hidden">
                   <CardHeader className="p-4 pb-0">
                     <CardTitle className="text-sm font-bold text-foreground">
                       Shrinkage (Hari Ini)

@@ -18,7 +18,7 @@ export function RadioHealthStore() {
       name="isStoreHealthy"
       render={({ field }) => (
         <RadioGroup 
-          className="flex flex-row gap-6" 
+          className="flex flex-row flex-wrap gap-4 sm:gap-6"
           onValueChange={field.onChange} 
           value={field.value}
         >

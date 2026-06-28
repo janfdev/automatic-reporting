@@ -3,9 +3,10 @@ import { desc, eq, inArray, count, and } from "drizzle-orm";
 import { db } from "@/db";
 import { store, users } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { nanoid } from "nanoid";
 
 function generateId() {
-  return "store_" + Math.random().toString(36).substring(2, 10);
+  return "store_" + nanoid(10);
 }
 
 export async function GET(req: Request) {

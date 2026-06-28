@@ -4,47 +4,46 @@ import { store, users, account } from "./schema";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 
+const storeDatas = [
+  { id: "store_banda_aceh", name: "Bright Banda Aceh", region: "Region I", location: "Aceh" },
+  { id: "store_merak_jingga", name: "Bright Merak Jingga", region: "Region I", location: "Medan" },
+  { id: "store_kenten", name: "Bright Kenten", region: "Region II", location: "Palembang" },
+  { id: "store_serang", name: "Bright Serang", region: "Region III", location: "Banten" },
+  { id: "store_bsd", name: "Bright BSD", region: "Region III", location: "Tangerang" },
+  { id: "store_fatmawati1", name: "Bright Fatmawati 1", region: "Region III", location: "DKI Jakarta" },
+  { id: "store_fatmawati2", name: "Bright Fatmawati 2", region: "Region III", location: "DKI Jakarta" },
+  { id: "store_narogong", name: "Bright Narogong", region: "Region IV", location: "Bekasi" },
+  { id: "store_cibinong", name: "Bright Cibinong", region: "Region IV", location: "Bogor" },
+  { id: "store_dago", name: "Bright Dago", region: "Region IV", location: "Bandung" },
+  { id: "store_soetta", name: "Bright Soekarno-Hatta", region: "Region IV", location: "Bandung" },
+  { id: "store_darsono", name: "Bright Darsono", region: "Region IV", location: "Cirebon" },
+  { id: "store_solo_baru", name: "Bright Solo Baru", region: "Region V", location: "Solo" },
+  { id: "store_teras", name: "Bright Teras", region: "Region V", location: "Boyolali" },
+  { id: "store_lempuyangan", name: "Bright Lempuyangan", region: "Region V", location: "DI Yogyakarta" },
+  { id: "store_jemursari", name: "Bright Jemursari", region: "Region VI", location: "Surabaya" },
+  { id: "store_langsep", name: "Bright Langsep", region: "Region VI", location: "Malang" },
+  { id: "store_hayam_wuruk", name: "Bright Hayam Wuruk", region: "Region VI", location: "Bali" },
+  { id: "store_kupang", name: "Bright Kupang", region: "Region VI", location: "NTT" },
+  { id: "store_brigjen", name: "Bright Brigjen", region: "Region VII", location: "Kaltim" },
+];
+
+const kasirNames = [
+  "Andi Pratama", "Siti Nurhaliza", "Budi Santoso", "Dewi Lestari", "Eko Wibowo",
+  "Fitriani Putri", "Gilang Ramadhan", "Hana Permata", "Irfan Hakim", "Joko Susilo",
+  "Kartika Sari", "Lukman Hakim", "Maya Angelina", "Nando Prasetyo", "Olivia Tanjung",
+  "Putra Wijaya", "Qori Shofia", "Rizky Febian", "Sari Dewi", "Tono Sugiarto",
+  "Ulya Rahma", "Vina Panduwinata", "Wahyu Nugroho", "Xena Putri", "Yusuf Maulana",
+  "Zahra Amalia", "Arief Budiman", "Citra Kirana", "Dani Kurniawan", "Elisa Gabriela",
+  "Fajar Nugraha", "Gita Gutawa", "Hendra Kusuma", "Indah Permatasari", "Jaya Setiabudi",
+  "Kenzo Wiryadi", "Lestari Wulandari", "Muhammad Rizal", "Nabila Husna", "Omar Dhani",
+];
+
 const seedData = async () => {
   console.log("Memulai proses seeding...\n");
 
-  // 1. DATA STORES (seName & saCount dikosongkan dulu, akan diisi otomatis dari user assignment)
-  const storeDatas = [
-    {
-      id: "store_bsd03",
-      name: "Bright BSD 03",
-      type: "Bright Store",
-      region: "Tangerang",
-      location: "Tangerang Selatan, BSD City",
-      operationalYear: 2013,
-      operationalHours: "24 Jam",
-      priceCluster: "Public",
-      targetSpd: 7500000,
-    },
-    {
-      id: "store_bintaro01",
-      name: "Bright Bintaro 01",
-      type: "Bright Store",
-      region: "Tangerang",
-      location: "Bintaro Sektor 7",
-      operationalYear: 2015,
-      operationalHours: "24 Jam",
-      priceCluster: "Public",
-      targetSpd: 6500000,
-    },
-    {
-      id: "store_fatmawati02",
-      name: "Bright Fatmawati 02",
-      type: "DODO",
-      region: "Jakarta",
-      location: "Jakarta Selatan, Jl. Fatmawati",
-      operationalYear: 2018,
-      operationalHours: "06:00 - 22:00",
-      priceCluster: "Premium",
-      targetSpd: 8500000,
-    },
-  ];
-
   try {
+    // 1. SEED STORES
+    console.log("Memulai seeding Stores...");
     for (const s of storeDatas) {
       const existing = await db.query.store.findFirst({
         where: eq(store.id, s.id),
@@ -52,151 +51,128 @@ const seedData = async () => {
 
       if (!existing) {
         await db.insert(store).values({
-          ...s,
+          id: s.id,
+          name: s.name,
+          type: "Bright Store",
+          region: s.region,
+          location: s.location,
           seName: null,
           saCount: null,
+          operationalYear: 2015 + Math.floor(Math.random() * 10),
+          operationalHours: Math.random() > 0.5 ? "24 Jam" : "06:00 - 22:00",
+          priceCluster: Math.random() > 0.5 ? "Public" : "Premium",
+          targetSpd: (Math.floor(Math.random() * 50) + 50) * 100000,
         });
-        console.log(`✅ Store ${s.name} berhasil ditambahkan.`);
+        console.log(`  Store ${s.name} ditambahkan.`);
       } else {
-        console.log(`ℹ️ Store ${s.name} sudah ada.`);
+        console.log(`  Store ${s.name} sudah ada.`);
       }
     }
 
-    // 2. DATA USERS & AKUN (dengan storeId sudah diisi)
+    // 2. SEED USERS (1 kasir per store)
     console.log("\nMemulai seeding Users...");
-
-    const userDatas = [
-      {
-        id: "usr_001",
-        name: "Kasir BSD",
-        email: "kasir.bsd@bright.com",
-        role: "kasir" as const,
-        storeId: "store_bsd03",
-        isSe: true,
-      },
-      {
-        id: "usr_002",
-        name: "Kasir Bintaro",
-        email: "kasir.bintaro@bright.com",
-        role: "kasir" as const,
-        storeId: "store_bintaro01",
-        isSe: true,
-      },
-      {
-        id: "usr_003",
-        name: "Admin Fatmawati",
-        email: "admin.fatmawati@bright.com",
-        role: "admin" as const,
-        storeId: "store_fatmawati02",
-        isSe: true,
-      },
-      {
-        id: "usr_004",
-        name: "Kasir BSD 2",
-        email: "kasir.bsd2@bright.com",
-        role: "kasir" as const,
-        storeId: "store_bsd03",
-        isSe: false,
-      },
-    ];
-
-    const dateNow = new Date();
     const seededPassword = "password123";
-    const createdUserIds: string[] = [];
+    const dateNow = new Date();
 
-    for (const u of userDatas) {
+    for (let i = 0; i < storeDatas.length; i++) {
+      const s = storeDatas[i];
+      const kasirName = kasirNames[i % kasirNames.length];
+      const email = `kasir.${s.id.replace("store_", "")}@bright.com`;
+      const userId = `usr_${s.id.replace("store_", "")}`;
+
       const existingUser = await db.query.users.findFirst({
-        where: eq(users.id, u.id),
+        where: eq(users.id, userId),
       });
 
       if (!existingUser) {
         await db.insert(users).values({
-          id: u.id,
-          name: u.name,
-          email: u.email,
+          id: userId,
+          name: kasirName,
+          email,
           emailVerified: true,
-          role: u.role,
-          storeId: u.storeId,
+          role: "kasir",
+          storeId: s.id,
           createdAt: dateNow,
           updatedAt: dateNow,
         });
+        console.log(`  User ${kasirName} (${s.name}) ditambahkan.`);
 
-        createdUserIds.push(u.id);
-        console.log(`✅ User ${u.name} (${u.storeId}) berhasil ditambahkan.`);
-      } else {
-        console.log(`ℹ️ User ${u.name} sudah ada.`);
-      }
-
-      // Create/update account dengan password hash
-      const hash = await hashPassword(seededPassword);
-      const existingAccount = await db.query.account.findFirst({
-        where: eq(account.userId, u.id),
-      });
-
-      if (existingAccount) {
-        await db
-          .update(account)
-          .set({
-            accountId: u.email,
-            providerId: "credential",
-            password: hash,
-            updatedAt: dateNow,
-          })
-          .where(eq(account.id, existingAccount.id));
-        console.log(
-          `🔐 Password akun ${u.email} diperbarui (Password: ${seededPassword}).`,
-        );
-      } else {
+        const hash = await hashPassword(seededPassword);
         await db.insert(account).values({
-          id: `acc_${u.id}`,
-          accountId: u.email,
+          id: `acc_${userId}`,
+          accountId: email,
           providerId: "credential",
-          userId: u.id,
+          userId,
           password: hash,
           createdAt: dateNow,
           updatedAt: dateNow,
         });
-        console.log(
-          `🔐 Account ${u.email} berhasil ditambahkan (Password: ${seededPassword}).`,
-        );
+        console.log(`  Account ${email} dibuat.`);
+      } else {
+        console.log(`  User ${kasirName} sudah ada.`);
       }
     }
 
-    // 3. Update seName & saCount untuk setiap store berdasarkan user yang di-assign
-    console.log("\nMemperbarui seName & saCount dari user assignment...");
-    const storeIds = storeDatas.map((s) => s.id);
+    // 3. SEED ADMIN
+    console.log("\nMemulai seeding Admin...");
+    const adminId = "usr_admin";
+    const adminEmail = "admin@bright.com";
+    const existingAdmin = await db.query.users.findFirst({
+      where: eq(users.id, adminId),
+    });
 
-    for (const storeId of storeIds) {
+    if (!existingAdmin) {
+      await db.insert(users).values({
+        id: adminId,
+        name: "Super Admin",
+        email: adminEmail,
+        emailVerified: true,
+        role: "admin",
+        storeId: null,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      });
+      const hash = await hashPassword(seededPassword);
+      await db.insert(account).values({
+        id: `acc_${adminId}`,
+        accountId: adminEmail,
+        providerId: "credential",
+        userId: adminId,
+        password: hash,
+        createdAt: dateNow,
+        updatedAt: dateNow,
+      });
+      console.log(`  Admin ${adminEmail} ditambahkan.`);
+    } else {
+      console.log(`  Admin sudah ada.`);
+    }
+
+    // 4. UPDATE seName & saCount
+    console.log("\nMemperbarui seName & saCount...");
+    for (const s of storeDatas) {
       const assignedUsers = await db
         .select({ id: users.id, name: users.name })
         .from(users)
-        .where(eq(users.storeId, storeId));
+        .where(eq(users.storeId, s.id));
 
       if (assignedUsers.length > 0) {
-        const seUser = assignedUsers[0]; // User pertama dijadikan SE
-        await db
-          .update(store)
-          .set({
-            seName: seUser.name,
-            saCount: assignedUsers.length,
-          })
-          .where(eq(store.id, storeId));
-
-        console.log(
-          `✅ Store ${storeId} → SE: "${seUser.name}", SA Count: ${assignedUsers.length}`,
-        );
+        await db.update(store).set({
+          seName: assignedUsers[0].name,
+          saCount: assignedUsers.length,
+        }).where(eq(store.id, s.id));
+        console.log(`  ${s.name} → SE: ${assignedUsers[0].name}, SA: ${assignedUsers.length}`);
       }
     }
 
-    console.log("\n✅ Semua proses Seeding selesai!");
-    console.log("\n📋 Akun yang tersedia:");
-    for (const u of userDatas) {
-      console.log(
-        `   ${u.email} / ${seededPassword} → ${u.role} (${u.storeId})`,
-      );
+    console.log("\nSeeding selesai!");
+    console.log("\nAkun tersedia:");
+    console.log(`  admin@bright.com / ${seededPassword} → admin`);
+    for (const s of storeDatas) {
+      const email = `kasir.${s.id.replace("store_", "")}@bright.com`;
+      console.log(`  ${email} / ${seededPassword} → kasir (${s.name})`);
     }
   } catch (error) {
-    console.error("❌ Terjadi kesalahan saat seeding:", error);
+    console.error("Gagal seeding:", error);
   }
 };
 
