@@ -20,15 +20,19 @@ export const reportSchema = z.object({
   fulfillmentPb: z.coerce
     .number()
     .int("Fulfillment harus angka")
-    .min(0)
+    .min(1, "Minimal 1%")
     .max(100, "Maksimal 100%")
-    .default(0),
+    .optional()
+    .or(z.nan())
+    .transform((v) => (v && !isNaN(v) ? v : 0)),
   avgFulfillmentDc: z.coerce
     .number()
     .int("Fulfillment harus angka")
-    .min(0)
+    .min(1, "Minimal 1%")
     .max(100, "Maksimal 100%")
-    .default(0),
+    .optional()
+    .or(z.nan())
+    .transform((v) => (v && !isNaN(v) ? v : 0)),
 
   itemOos: z
     .array(

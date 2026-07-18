@@ -51,6 +51,7 @@ type Store = {
   id: string;
   name: string;
   type: string;
+  region: string | null;
   location: string;
   seName: string | null;
   saCount: number | null;
@@ -85,6 +86,7 @@ export function StoreManagement() {
   const [formData, setFormData] = useState({
     name: "",
     type: "Bright Store",
+    region: "",
     location: "",
     targetSpd: 0,
     operationalYear: new Date().getFullYear(),
@@ -144,6 +146,7 @@ export function StoreManagement() {
     setFormData({
       name: "",
       type: "Bright Store",
+      region: "",
       location: "",
       targetSpd: 0,
       operationalYear: new Date().getFullYear(),
@@ -166,6 +169,7 @@ export function StoreManagement() {
     setFormData({
       name: store.name,
       type: store.type,
+      region: store.region || "",
       location: store.location,
       targetSpd: store.targetSpd || 0,
       operationalYear: store.operationalYear || new Date().getFullYear(),
@@ -205,6 +209,7 @@ export function StoreManagement() {
       const body = {
         name: formData.name,
         type: formData.type,
+        region: formData.region || null,
         location: formData.location,
         targetSpd: formData.targetSpd,
         operationalYear: formData.operationalYear,
@@ -276,6 +281,7 @@ export function StoreManagement() {
                   <p className="text-xs text-muted-foreground">
                     {store.type} - {store.location}
                   </p>
+                  <p className="text-xs text-muted-foreground">Region: {store.region || "-"}</p>
                   <p className="text-xs text-muted-foreground">SE: {store.seName || "-"}</p>
                   <p className="text-xs text-muted-foreground">SA: {store.saCount ?? "-"} org</p>
                   <p className="text-xs text-muted-foreground">Jam: {store.operationalHours || "-"}</p>
@@ -311,6 +317,7 @@ export function StoreManagement() {
                   <TableHead>SA Count</TableHead>
                   <TableHead>Lokasi</TableHead>
                   <TableHead>Tipe</TableHead>
+                  <TableHead>Region</TableHead>
                   <TableHead>Jam Operasional</TableHead>
                   <TableHead>Target SPD</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
@@ -333,6 +340,9 @@ export function StoreManagement() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {store.type}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {store.region || "-"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {store.operationalHours || "-"}
@@ -363,7 +373,7 @@ export function StoreManagement() {
                 ))}
                 {stores.length === 0 && !loading && (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
+                    <TableCell colSpan={9} className="h-24 text-center">
                       Tidak ada store ditemukan.
                     </TableCell>
                   </TableRow>
@@ -492,6 +502,20 @@ export function StoreManagement() {
                   }
                   className="sm:col-span-3"
                   required
+                />
+              </div>
+              <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">
+                <Label htmlFor="sregion" className="text-left sm:text-right">
+                  Region
+                </Label>
+                <Input
+                  id="sregion"
+                  value={formData.region}
+                  onChange={(e) =>
+                    setFormData({ ...formData, region: e.target.value })
+                  }
+                  className="sm:col-span-3"
+                  placeholder="Contoh: Tangerang, Jakarta"
                 />
               </div>
               <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-4 sm:gap-4">

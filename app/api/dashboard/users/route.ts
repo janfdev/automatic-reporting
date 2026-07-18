@@ -4,9 +4,10 @@ import { db } from "@/db";
 import { store, users, account, session as sessionTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { hashPassword } from "better-auth/crypto";
+import { nanoid } from "nanoid";
 
 function generateId() {
-  return "usr_" + Math.random().toString(36).substring(2, 10);
+  return "usr_" + nanoid(10);
 }
 
 async function syncStoreAssignment(storeId: string | null) {

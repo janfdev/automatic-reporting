@@ -34,7 +34,7 @@ async function loadPeriodSummary(params: {
 
   const [totals] = await db
     .select({
-      reportCount: sql<number>`count(*)`,
+      reportCount: sql<number>`count(distinct date_trunc('day', ${dailyReports.reportDate}))::int`,
       totalSales: sql<number>`coalesce(sum(${dailyReports.totalSales}), 0)`,
       salesGroceries: sql<number>`coalesce(sum(${dailyReports.salesGroceries}), 0)`,
       salesLpg: sql<number>`coalesce(sum(${dailyReports.salesLpg}), 0)`,
@@ -91,28 +91,6 @@ Kondisi store : *{{ HEALTH_STATUS }}*
 *Rincian Sales*
 {{ SALES_DETAILS_LIST }}
 
-*Detail Sales*
-* Groceries: {{ DETAIL_GROCERIES }}
-* Sales LPG: {{ DETAIL_LPG }}
-* Pelumas: {{ DETAIL_PELUMAS }}
-
-*Total Sales (SPD)* : {{ TOTAL_SALES }}
-*Target SPD*: {{ TARGET_SPD }}
-*% Pencapaian Target {{ PENCAPAIAN }}%*
-
-*Info SC & MD*
-* Fulfillment PB terakhir = {{ FULFILLMENT_PB }}
-* Avg Fulfillment DC = {{ AVG_FULFILLMENT_DC }}
-
-*Item OOS Store Fast Moving*
-{{ OOS_ITEMS }}
-
-*Stock LPG hari ini* tanggal {{ DATE }}
-* LPG 3kg : {{ STOCK_LPG_3KG }} tabung
-* LPG 5,5 kg : {{ STOCK_LPG_5_5KG }} tabung
-* LPG 12kg : {{ STOCK_LPG_12KG }} tabung
-
-MTD
 *Pencapaian Sales {{ MTD_LABEL }}*
 * Total Sales MTD : {{ MTD_TOTAL_SALES }}
 * Sales Per Day MTD: {{ MTD_SPD }}
@@ -123,10 +101,31 @@ MTD
 *Yearly SPD:*
 {{ YEARLY_SPD_LIST }}
 
+*Detail Sales*
+* Groceries: {{ DETAIL_GROCERIES }}
+* Sales LPG: {{ DETAIL_LPG }}
+* Pelumas: {{ DETAIL_PELUMAS }}
+
+*Total Sales (SPD)* : {{ TOTAL_SALES }}
+*Target SPD*: {{ TARGET_SPD }}
+*% Pencapaian Target {{ PENCAPAIAN }}%*
+
 *Shrinkage Management*
 (Losses, waste)
-*Waste: Rp {{ WASTE }}
+* Waste: Rp {{ WASTE }}
 * Losses: Rp {{ LOSSES }}
+
+*Stock LPG hari ini* tanggal {{ DATE }}
+* LPG 3kg : {{ STOCK_LPG_3KG }} tabung
+* LPG 5,5 kg : {{ STOCK_LPG_5_5KG }} tabung
+* LPG 12kg : {{ STOCK_LPG_12KG }} tabung
+
+*Info SC & MD*
+* Fulfillment PB terakhir = {{ FULFILLMENT_PB }}
+* Avg Fulfillment DC = {{ AVG_FULFILLMENT_DC }}
+
+*Item OOS Store Fast Moving*
+{{ OOS_ITEMS }}
 
 *Kendala:*
 {{ KENDALA }}
@@ -134,8 +133,8 @@ MTD
 *Need Support:*
 {{ NEED_SUPPORT }}
 
-*Semangat! 💪🏻*
-Have a *Bright* Day🌤️`;
+*Semangat!*
+Have a *Bright* Day`;
 
 function renderTemplate(
   template: string,
